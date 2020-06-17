@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+.vs*
+Direct3DStudy/x64*
+x64*
