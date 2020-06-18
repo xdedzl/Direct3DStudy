@@ -9,6 +9,18 @@ class GameApp : public D3DApp
 {
 public:
 
+	struct CBChangesEveryDrawing
+	{
+		DirectX::XMMATRIX world;
+		DirectX::XMMATRIX worldInvTranspose;
+	};
+
+	struct CBChangeEveryFrame
+	{
+		DirectX::XMMATRIX view;
+		DirectX::XMFLOAT4 eyePos;
+	};
+
 	struct VSConstantBuffer
 	{
 		DirectX::XMMATRIX world;
