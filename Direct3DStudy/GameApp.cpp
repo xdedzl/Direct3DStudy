@@ -44,9 +44,7 @@ void GameApp::OnResize()
 
 void GameApp::UpdateScene(float dt)
 {
-	static float phi = 0.0f, theta = 0.0f;
-
-	
+	static float phi = 0.0f, theta = 0.0f, x = 0.0f, z = 0.0f;
 
 	// 获取鼠标状态
 	Mouse::State mouseState = m_pMouse->GetState();
@@ -112,15 +110,14 @@ void GameApp::UpdateScene(float dt)
 		phi -= (mouseState.y - lastMouseState.y) * 0.01f;
 	}
 	if (keyState.IsKeyDown(Keyboard::W))
-		phi += dt * 2;
+		z += dt * 2;
 	if (keyState.IsKeyDown(Keyboard::S))
-		phi -= dt * 2;
+		z -= dt * 2;
 	if (keyState.IsKeyDown(Keyboard::A))
-		theta += dt * 2;
+		x -= dt * 2;
 	if (keyState.IsKeyDown(Keyboard::D))
-		theta -= dt * 2;
-
-	XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta);
+		x += dt * 2;
+	XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta) * XMMatrixTranslation(x, 0, z);
 	m_VSConstantBuffer.world = XMMatrixTranspose(W);
 	m_VSConstantBuffer.worldInvTranspose = XMMatrixInverse(nullptr, W);	// 两次转置可以抵消
 
@@ -149,7 +146,6 @@ void GameApp::DrawScene()
 	HR(m_pSwapChain->Present(0, 0));
 }
 
-
 bool GameApp::InitEffect()
 {
 	ComPtr<ID3DBlob> blob;
@@ -175,7 +171,6 @@ bool GameApp::InitResource()
 	//
 	auto meshData = Geometry::CreateBox<VertexPosNormalColor>();
 	ResetMesh(meshData);
-
 
 	// ******************
 	// 设置常量缓冲区描述
@@ -302,8 +297,6 @@ bool GameApp::ResetMesh(const Geometry::MeshData<VertexPosNormalColor>& meshData
 
 	m_pd3dImmediateContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
 
-
-
 	// 设置索引缓冲区描述
 	m_IndexCount = (UINT)meshData.indexVec.size();
 	D3D11_BUFFER_DESC ibd;
@@ -317,8 +310,6 @@ bool GameApp::ResetMesh(const Geometry::MeshData<VertexPosNormalColor>& meshData
 	HR(m_pd3dDevice->CreateBuffer(&ibd, &InitData, m_pIndexBuffer.GetAddressOf()));
 	// 输入装配阶段的索引缓冲区设置
 	m_pd3dImmediateContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-
 
 	// 设置调试对象名
 	D3D11SetDebugObjectName(m_pVertexBuffer.Get(), "VertexBuffer");
