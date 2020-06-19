@@ -121,6 +121,9 @@
     <None Include="HLSL\LightHelper.hlsli">
       <Filter>着色器</Filter>
     </None>
+    <None Include="HLSL\Basic.hlsli">
+      <Filter>着色器</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="HLSL\Triangle_PS.hlsl">
