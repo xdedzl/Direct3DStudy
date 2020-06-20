@@ -1,41 +1,78 @@
-#include "DirectXMath.h"
-#include <string>
-#include "LightHelper.h"
-#include "Geometry.h"
+#pragma once
 #include "Transform.h"
-#include <wrl/client.h>
-using namespace DirectX;
-
-// Ò»¸ö¾¡¿ÉÄÜĞ¡µÄÓÎÏ·¶ÔÏóÀà
-class GameObject
+#include <d3d11_1.h>
+#include "Geometry.h"
+#include <wrl\client.h>
+#include "DXTrace.h"
+namespace XFramework
 {
-	template <class T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
-public:
-	GameObject();
+	// ä¸€ä¸ªå°½å¯èƒ½å°çš„æ¸¸æˆå¯¹è±¡ç±»
+	class GameObject
+	{
+	public:
+		GameObject();
 
-	// »ñÈ¡ÎïÌå±ä»»
-	Transform& GetTransform();
-	// »ñÈ¡ÎïÌå±ä»»
-	const Transform& GetTransform() const;
+		// è·å–ç‰©ä½“å˜æ¢
+		Transform& GetTransform();
+		// è·å–ç‰©ä½“å˜æ¢
+		const Transform& GetTransform() const;
 
-	// ÉèÖÃ»º³åÇø
+		// è®¾ç½®ç¼“å†²åŒº
+		template<class VertexType, class IndexType>
+		void SetBuffer(ID3D11Device* device, const Geometry::MeshData<VertexType, IndexType>& meshData);
+		// è®¾ç½®çº¹ç†
+		void SetTexture(ID3D11ShaderResourceView* texture);
+
+		// ç»˜åˆ¶
+		void Draw(ID3D11DeviceContext* deviceContext);
+
+		// è®¾ç½®è°ƒè¯•å¯¹è±¡å
+		// è‹¥ç¼“å†²åŒºè¢«é‡æ–°è®¾ç½®ï¼Œè°ƒè¯•å¯¹è±¡åä¹Ÿéœ€è¦è¢«é‡æ–°è®¾ç½®
+		void SetDebugObjectName(const std::string& name);
+	private:
+		template <class T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
+		Transform m_Transform;								// ç‰©ä½“å˜æ¢ä¿¡æ¯
+		ComPtr<ID3D11ShaderResourceView> m_pTexture;		// çº¹ç†
+		ComPtr<ID3D11Buffer> m_pVertexBuffer;				// é¡¶ç‚¹ç¼“å†²åŒº
+		ComPtr<ID3D11Buffer> m_pIndexBuffer;				// ç´¢å¼•ç¼“å†²åŒº
+		UINT m_VertexStride;								// é¡¶ç‚¹å­—èŠ‚å¤§å°
+		UINT m_IndexCount;								    // ç´¢å¼•æ•°ç›®	
+	};
+
+
 	template<class VertexType, class IndexType>
-	void SetBuffer(ID3D11Device* device, const Geometry::MeshData<VertexType, IndexType>& meshData);
-	// ÉèÖÃÎÆÀí
-	void SetTexture(ID3D11ShaderResourceView* texture);
+	void GameObject::SetBuffer(ID3D11Device* device, const Geometry::MeshData<VertexType, IndexType>& meshData)
+	{
+		// é‡Šæ”¾æ—§èµ„æº
+		m_pVertexBuffer.Reset();
+		m_pIndexBuffer.Reset();
 
-	// »æÖÆ
-	void Draw(ID3D11DeviceContext* deviceContext);
+		// è®¾ç½®é¡¶ç‚¹ç¼“å†²åŒºæè¿°
+		m_VertexStride = sizeof(VertexType);
+		D3D11_BUFFER_DESC vbd;
+		ZeroMemory(&vbd, sizeof(vbd));
+		vbd.Usage = D3D11_USAGE_IMMUTABLE;
+		vbd.ByteWidth = (UINT)meshData.vertexVec.size() * m_VertexStride;
+		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vbd.CPUAccessFlags = 0;
+		// æ–°å»ºé¡¶ç‚¹ç¼“å†²åŒº
+		D3D11_SUBRESOURCE_DATA InitData;
+		ZeroMemory(&InitData, sizeof(InitData));
+		InitData.pSysMem = meshData.vertexVec.data();
+		HR(device->CreateBuffer(&vbd, &InitData, m_pVertexBuffer.GetAddressOf()));
 
-	// ÉèÖÃµ÷ÊÔ¶ÔÏóÃû
-	// Èô»º³åÇø±»ÖØĞÂÉèÖÃ£¬µ÷ÊÔ¶ÔÏóÃûÒ²ĞèÒª±»ÖØĞÂÉèÖÃ
-	void SetDebugObjectName(const std::string& name);
-private:
-	Transform m_Transform;								// ÎïÌå±ä»»ĞÅÏ¢
-	ComPtr<ID3D11ShaderResourceView> m_pTexture;		// ÎÆÀí
-	ComPtr<ID3D11Buffer> m_pVertexBuffer;				// ¶¥µã»º³åÇø
-	ComPtr<ID3D11Buffer> m_pIndexBuffer;				// Ë÷Òı»º³åÇø
-	UINT m_VertexStride;								// ¶¥µã×Ö½Ú´óĞ¡
-	UINT m_IndexCount;								    // Ë÷ÒıÊıÄ¿	
-};
+
+		// è®¾ç½®ç´¢å¼•ç¼“å†²åŒºæè¿°
+		m_IndexCount = (UINT)meshData.indexVec.size();
+		D3D11_BUFFER_DESC ibd;
+		ZeroMemory(&ibd, sizeof(ibd));
+		ibd.Usage = D3D11_USAGE_IMMUTABLE;
+		ibd.ByteWidth = m_IndexCount * sizeof(IndexType);
+		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		ibd.CPUAccessFlags = 0;
+		// æ–°å»ºç´¢å¼•ç¼“å†²åŒº
+		InitData.pSysMem = meshData.indexVec.data();
+		HR(device->CreateBuffer(&ibd, &InitData, m_pIndexBuffer.GetAddressOf()));
+	}
+}

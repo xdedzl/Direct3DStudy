@@ -2,58 +2,17 @@
 #define GAMEAPP_H
 
 #include "d3dApp.h"
-#include "LightHelper.h"
+#include "ConstantBufferStruct.h"
 #include "Geometry.h"
+#include "Camera.h"
+#include "GameObject.h"
+#include "Vehicle.h"
+using namespace XFramework;
 
 class GameApp : public D3DApp
 {
 public:
-
-	struct CBChangesEveryDrawing
-	{
-		DirectX::XMMATRIX world;
-		DirectX::XMMATRIX worldInvTranspose;
-	};
-
-	struct CBChangeEveryFrame
-	{
-		DirectX::XMMATRIX view;
-		DirectX::XMFLOAT4 eyePos;
-	};
-
-	struct CBChangeOnResize
-	{
-		DirectX::XMMATRIX proj;
-	};
-
-	struct CBChangesRarely
-	{
-		DirectionalLight dirLight[10];
-		PointLight pointLight[10];
-		SpotLight spotLight[10];
-		Material material;
-		int numDirLight;
-		int numPointLight;
-		int numSpotLight;
-		float pad;			// ´ò°ü±£Ö¤16×Ö½Ú¶ÔÆë
-	};
-
-	struct VSConstantBuffer
-	{
-		DirectX::XMMATRIX world;
-		DirectX::XMMATRIX view;
-		DirectX::XMMATRIX proj;
-		DirectX::XMMATRIX worldInvTranspose;
-	};
-
-	struct PSConstantBuffer
-	{
-		DirectionalLight dirLight;
-		PointLight pointLight;
-		SpotLight spotLight;
-		Material material;
-		DirectX::XMFLOAT4 eyePos;
-	};
+	
 
 public:
 	GameApp(HINSTANCE hInstance);
@@ -72,23 +31,27 @@ private:
 
 
 private:
-	ComPtr<ID3D11InputLayout> m_pVertexLayout;	    // ¶¥µãÊäÈë²¼¾Ö
-	ComPtr<ID3D11Buffer> m_pVertexBuffer;			// ¶¥µã»º³åÇø
-	ComPtr<ID3D11Buffer> m_pIndexBuffer;			// Ë÷Òı»º³åÇø
-	ComPtr<ID3D11Buffer> m_pConstantBuffers[2];		// ³£Á¿»º³åÇø
-	UINT m_IndexCount;								// »æÖÆÎïÌåµÄË÷ÒıÊı×é´óĞ¡
+	ComPtr<ID3D11InputLayout> m_pVertexLayout3D;	// ç”¨äº3Dçš„é¡¶ç‚¹è¾“å…¥å¸ƒå±€
+	ComPtr<ID3D11Buffer> m_pConstantBuffers[4];		// å¸¸é‡ç¼“å†²åŒº
 
-	ComPtr<ID3D11VertexShader> m_pVertexShader;	    // ¶¥µã×ÅÉ«Æ÷
-	ComPtr<ID3D11PixelShader> m_pPixelShader;		// ÏñËØ×ÅÉ«Æ÷
-	VSConstantBuffer m_VSConstantBuffer;	            // ÓÃÓÚĞŞ¸ÄGPU³£Á¿»º³åÇøµÄ±äÁ¿
-	PSConstantBuffer m_PSConstantBuffer;             // ÓÃÓÚĞŞ¸ÄGPU³£Á¿»º³åÇøµÄ±äÁ¿
+	GameObject m_WoodCrate;							// æœ¨ç›’
+	GameObject m_Floor;							    // åœ°æ¿
+	Vehicle m_Vehicle;
 
-	DirectionalLight m_DirLight;					// Ä¬ÈÏ»·¾³¹â
-	PointLight m_PointLight;						// Ä¬ÈÏµã¹â
-	SpotLight m_SpotLight;							// Ä¬ÈÏ¾Û¹âµÆ
+	ComPtr<ID3D11VertexShader> m_pVertexShader3D;	// é¡¶ç‚¹ç€è‰²å™¨
+	ComPtr<ID3D11PixelShader> m_pPixelShader3D;		// åƒç´ ç€è‰²å™¨
 
-	ComPtr<ID3D11RasterizerState> m_pRSWireframe;	// ¹âÕ¤»¯×´Ì¬£ºÏß¿òÄ£Ê½
-	bool m_IsWireframeMode;							// µ±Ç°ÊÇ·ñÎªÏß¿òÄ£Ê½
+	CBChangesEveryFrame m_CBFrame;							    // è¯¥ç¼“å†²åŒºå­˜æ”¾ä»…åœ¨æ¯ä¸€å¸§è¿›è¡Œæ›´æ–°çš„å˜é‡
+	CBChangesOnResize m_CBOnResize;							    // è¯¥ç¼“å†²åŒºå­˜æ”¾ä»…åœ¨çª—å£å¤§å°å˜åŒ–æ—¶æ›´æ–°çš„å˜é‡
+	CBChangesRarely m_CBRarely;								    // è¯¥ç¼“å†²åŒºå­˜æ”¾ä¸ä¼šå†è¿›è¡Œä¿®æ”¹çš„å˜é‡
+
+	ComPtr<ID3D11SamplerState> m_pSamplerState;				    // é‡‡æ ·å™¨çŠ¶æ€
+
+
+	std::shared_ptr<Camera> m_pCamera;
+
+	ComPtr<ID3D11RasterizerState> m_pRSWireframe;	// å…‰æ …åŒ–çŠ¶æ€ï¼šçº¿æ¡†æ¨¡å¼
+	bool m_IsWireframeMode;							// å½“å‰æ˜¯å¦ä¸ºçº¿æ¡†æ¨¡å¼
 };
 
 

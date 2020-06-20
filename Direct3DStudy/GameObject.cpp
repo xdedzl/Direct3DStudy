@@ -1,7 +1,8 @@
 #include "GameObject.h"
-#include "GameApp.h"
+#include "ConstantBufferStruct.h"
 #include "DXTrace.h"
-#include "d3dApp.h"
+using namespace XFramework;
+using namespace DirectX;
 
 GameObject::GameObject()
 	: m_IndexCount(), m_VertexStride()
@@ -18,44 +19,6 @@ const Transform& GameObject::GetTransform() const
 	return m_Transform;
 }
 
-template<class VertexType, class IndexType>
-void GameObject::SetBuffer(ID3D11Device* device, const Geometry::MeshData<VertexType, IndexType>& meshData)
-{
-	// ÊÍ·Å¾É×ÊÔ´
-	m_pVertexBuffer.Reset();
-	m_pIndexBuffer.Reset();
-
-	// ÉèÖÃ¶¥µã»º³åÇøÃèÊö
-	m_VertexStride = sizeof(VertexType);
-	D3D11_BUFFER_DESC vbd;
-	ZeroMemory(&vbd, sizeof(vbd));
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = (UINT)meshData.vertexVec.size() * m_VertexStride;
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.CPUAccessFlags = 0;
-	// ĞÂ½¨¶¥µã»º³åÇø
-	D3D11_SUBRESOURCE_DATA InitData;
-	ZeroMemory(&InitData, sizeof(InitData));
-	InitData.pSysMem = meshData.vertexVec.data();
-	HR(device->CreateBuffer(&vbd, &InitData, m_pVertexBuffer.GetAddressOf()));
-
-
-	// ÉèÖÃË÷Òı»º³åÇøÃèÊö
-	m_IndexCount = (UINT)meshData.indexVec.size();
-	D3D11_BUFFER_DESC ibd;
-	ZeroMemory(&ibd, sizeof(ibd));
-	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = m_IndexCount * sizeof(IndexType);
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.CPUAccessFlags = 0;
-	// ĞÂ½¨Ë÷Òı»º³åÇø
-	InitData.pSysMem = meshData.indexVec.data();
-	HR(device->CreateBuffer(&ibd, &InitData, m_pIndexBuffer.GetAddressOf()));
-
-
-
-}
-
 void GameObject::SetTexture(ID3D11ShaderResourceView* texture)
 {
 	m_pTexture = texture;
@@ -63,31 +26,31 @@ void GameObject::SetTexture(ID3D11ShaderResourceView* texture)
 
 void GameObject::Draw(ID3D11DeviceContext* deviceContext)
 {
-	// ÉèÖÃ¶¥µã/Ë÷Òı»º³åÇø
+	// è®¾ç½®é¡¶ç‚¹/ç´¢å¼•ç¼“å†²åŒº
 	UINT strides = m_VertexStride;
 	UINT offsets = 0;
 	deviceContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &strides, &offsets);
 	deviceContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-	// »ñÈ¡Ö®Ç°ÒÑ¾­°ó¶¨µ½äÖÈ¾¹ÜÏßÉÏµÄ³£Á¿»º³åÇø²¢½øĞĞĞŞ¸Ä
+	// è·å–ä¹‹å‰å·²ç»ç»‘å®šåˆ°æ¸²æŸ“ç®¡çº¿ä¸Šçš„å¸¸é‡ç¼“å†²åŒºå¹¶è¿›è¡Œä¿®æ”¹
 	ComPtr<ID3D11Buffer> cBuffer = nullptr;
 	deviceContext->VSGetConstantBuffers(0, 1, cBuffer.GetAddressOf());
-	GameApp::CBChangesEveryDrawing cbDrawing;
+	CBChangesEveryDrawing cbDrawing;
 
-	// ÄÚ²¿½øĞĞ×ªÖÃ
+	// å†…éƒ¨è¿›è¡Œè½¬ç½®
 	XMMATRIX W = m_Transform.GetLocalToWorldMatrixXM();
 	cbDrawing.world = XMMatrixTranspose(W);
-	cbDrawing.worldInvTranspose = XMMatrixInverse(nullptr, W);	// Á½´Î×ªÖÃµÖÏû
+	cbDrawing.worldInvTranspose = XMMatrixInverse(nullptr, W);	// ä¸¤æ¬¡è½¬ç½®æŠµæ¶ˆ
 
-	// ¸üĞÂ³£Á¿»º³åÇø
+	// æ›´æ–°å¸¸é‡ç¼“å†²åŒº
 	D3D11_MAPPED_SUBRESOURCE mappedData;
 	HR(deviceContext->Map(cBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
-	memcpy_s(mappedData.pData, sizeof(GameApp::CBChangesEveryDrawing), &cbDrawing, sizeof(GameApp::CBChangesEveryDrawing));
+	memcpy_s(mappedData.pData, sizeof(CBChangesEveryDrawing), &cbDrawing, sizeof(CBChangesEveryDrawing));
 	deviceContext->Unmap(cBuffer.Get(), 0);
 
-	// ÉèÖÃÎÆÀí
+	// è®¾ç½®çº¹ç†
 	deviceContext->PSSetShaderResources(0, 1, m_pTexture.GetAddressOf());
-	// ¿ÉÒÔ¿ªÊ¼»æÖÆ
+	// å¯ä»¥å¼€å§‹ç»˜åˆ¶
 	deviceContext->DrawIndexed(m_IndexCount, 0, 0);
 }
 

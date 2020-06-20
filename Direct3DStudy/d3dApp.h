@@ -9,14 +9,14 @@
 #include "Keyboard.h"
 #include "GameTimer.h"
 
-// 添加所有要引用的库
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "D3DCompiler.lib")
-#pragma comment(lib, "winmm.lib")
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib,"user32.lib")
+//// 添加所有要引用的库
+//#pragma comment(lib, "d3d11.lib")
+//#pragma comment(lib, "dxgi.lib")
+//#pragma comment(lib, "dxguid.lib")
+//#pragma comment(lib, "D3DCompiler.lib")
+//#pragma comment(lib, "winmm.lib")
+//#pragma comment(lib, "gdi32.lib")
+//#pragma comment(lib,"user32.lib")
 
 class D3DApp
 {
