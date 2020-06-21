@@ -87,7 +87,7 @@ XMMATRIX Transform::GetLocalToWorldMatrixXM() const
 	if (m_Parnet != nullptr)
 	{
 		auto parentMat = m_Parnet->GetLocalToWorldMatrixXM();
-		return parentMat * World;
+		return World * parentMat;
 	}
 
 	return World;
