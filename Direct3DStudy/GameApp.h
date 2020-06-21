@@ -7,7 +7,6 @@
 #include "Camera.h"
 #include "GameObject.h"
 #include "Vehicle.h"
-using namespace XFramework;
 
 class GameApp : public D3DApp
 {
@@ -34,7 +33,6 @@ private:
 	ComPtr<ID3D11InputLayout> m_pVertexLayout3D;	// 用于3D的顶点输入布局
 	ComPtr<ID3D11Buffer> m_pConstantBuffers[4];		// 常量缓冲区
 
-	GameObject m_WoodCrate;							// 木盒
 	GameObject m_Floor;							    // 地板
 	Vehicle m_Vehicle;
 

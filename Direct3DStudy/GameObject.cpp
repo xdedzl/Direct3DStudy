@@ -1,7 +1,6 @@
 #include "GameObject.h"
 #include "ConstantBufferStruct.h"
 #include "DXTrace.h"
-using namespace XFramework;
 using namespace DirectX;
 
 GameObject::GameObject()
@@ -9,14 +8,9 @@ GameObject::GameObject()
 {
 }
 
-Transform& GameObject::GetTransform()
+Transform* GameObject::GetTransform()
 {
-	return m_Transform;
-}
-
-const Transform& GameObject::GetTransform() const
-{
-	return m_Transform;
+	return &m_Transform;
 }
 
 void GameObject::SetTexture(ID3D11ShaderResourceView* texture)

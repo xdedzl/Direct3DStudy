@@ -2,6 +2,7 @@
 #include "d3dUtil.h"
 #include "DXTrace.h"
 #include <sstream>
+#include "Input.h"
 
 namespace
 {
@@ -103,9 +104,6 @@ int D3DApp::Run()
 
 bool D3DApp::Init()
 {
-	m_pMouse = std::make_unique<DirectX::Mouse>();
-	m_pKeyboard = std::make_unique<DirectX::Keyboard>();
-
 	if (!InitMainWindow())
 		return false;
 
@@ -322,19 +320,19 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEHOVER:
 	case WM_MOUSEMOVE:
-		m_pMouse->ProcessMessage(msg, wParam, lParam);
+		Input::Instance()->MouseProcessMessage(msg, wParam, lParam);
 		return 0;
 
 	case WM_KEYDOWN:
 	case WM_SYSKEYDOWN:
 	case WM_KEYUP:
 	case WM_SYSKEYUP:
-		m_pKeyboard->ProcessMessage(msg, wParam, lParam);
+		Input::Instance()->KeyboardProcessMessage(msg, wParam, lParam);
 		return 0;
 
 	case WM_ACTIVATEAPP:
-		m_pMouse->ProcessMessage(msg, wParam, lParam);
-		m_pKeyboard->ProcessMessage(msg, wParam, lParam);
+		Input::Instance()->MouseProcessMessage(msg, wParam, lParam);
+		Input::Instance()->KeyboardProcessMessage(msg, wParam, lParam);
 		return 0;
 	}
 

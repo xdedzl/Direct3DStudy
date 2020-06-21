@@ -75,6 +75,12 @@
     <ClInclude Include="Vehicle.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Singleton.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="d3dApp.cpp">
@@ -120,6 +126,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Vehicle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

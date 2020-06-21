@@ -5,6 +5,8 @@ using namespace DirectX;
 Transform::Transform(const DirectX::XMFLOAT3& scale, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& position)
 	: m_Scale(scale), m_Rotation(rotation), m_Position(position)
 {
+	m_Parnet = nullptr;
+	m_Childs = list<Transform*>();
 }
 
 XMFLOAT3 Transform::GetScale() const
@@ -14,10 +16,32 @@ XMFLOAT3 Transform::GetScale() const
 
 XMFLOAT3 Transform::GetRotation() const
 {
+	if (m_Parnet != nullptr)
+	{
+		auto parentRot = m_Parnet->GetRotation();
+		return XMFLOAT3(m_Rotation.x + parentRot.x, m_Rotation.y + parentRot.y, m_Rotation.z + parentRot.z);
+	}
+	return m_Rotation;
+}
+
+XMFLOAT3 Transform::GetLocalRotation() const
+{
 	return m_Rotation;
 }
 
 XMFLOAT3 Transform::GetPosition() const
+{
+	if (m_Parnet != nullptr)
+	{
+		auto parentPos = m_Parnet->GetPosition();
+		auto parentForward = m_Parnet->GetForwardAxis();
+
+		return XMFLOAT3(m_Position.x + parentPos.x, m_Position.y + parentPos.y, m_Position.z + parentPos.z);
+	}
+	return m_Position;
+}
+
+XMFLOAT3 Transform::GetLocalPosition() const
 {
 	return m_Position;
 }
@@ -59,6 +83,13 @@ XMMATRIX Transform::GetLocalToWorldMatrixXM() const
 	XMVECTOR rotationVec = XMLoadFloat3(&m_Rotation);
 	XMVECTOR positionVec = XMLoadFloat3(&m_Position);
 	XMMATRIX World = XMMatrixScalingFromVector(scaleVec) * XMMatrixRotationRollPitchYawFromVector(rotationVec) * XMMatrixTranslationFromVector(positionVec);
+
+	if (m_Parnet != nullptr)
+	{
+		auto parentMat = m_Parnet->GetLocalToWorldMatrixXM();
+		return parentMat * World;
+	}
+
 	return World;
 }
 
@@ -95,12 +126,12 @@ void Transform::SetRotation(float x, float y, float z)
 	m_Rotation = XMFLOAT3(x, y, z);
 }
 
-void Transform::SetPosition(const XMFLOAT3& position)
+void Transform::SetLocalPosition(const XMFLOAT3& position)
 {
 	m_Position = position;
 }
 
-void Transform::SetPosition(float x, float y, float z)
+void Transform::SetLocalPosition(float x, float y, float z)
 {
 	m_Position = XMFLOAT3(x, y, z);
 }
@@ -127,7 +158,7 @@ void Transform::RotateAround(const XMFLOAT3& point, const XMFLOAT3& axis, float 
 	XMVECTOR positionVec = XMLoadFloat3(&m_Position);
 	XMVECTOR centerVec = XMLoadFloat3(&point);
 
-	// ÒÔpoint×÷ÎªÔ­µã½øÐÐÐý×ª
+	// ä»¥pointä½œä¸ºåŽŸç‚¹è¿›è¡Œæ—‹è½¬
 	XMMATRIX RT = XMMatrixRotationRollPitchYawFromVector(rotationVec) * XMMatrixTranslationFromVector(positionVec - centerVec);
 	RT *= XMMatrixRotationAxis(XMLoadFloat3(&axis), XMConvertToRadians(radian));
 	RT *= XMMatrixTranslationFromVector(centerVec);
@@ -162,9 +193,9 @@ void Transform::LookTo(const XMFLOAT3& direction, const XMFLOAT3& up)
 
 XMFLOAT3 Transform::GetEulerAnglesFromRotationMatrix(const XMFLOAT4X4& rotationMatrix)
 {
-	// Í¨¹ýÐý×ª¾ØÕó·´ÇóÅ·À­½Ç
+	// é€šè¿‡æ—‹è½¬çŸ©é˜µåæ±‚æ¬§æ‹‰è§’
 	float c = sqrtf(1.0f - rotationMatrix(2, 1) * rotationMatrix(2, 1));
-	// ·ÀÖ¹r[2][1]³öÏÖ´óÓÚ1µÄÇé¿ö
+	// é˜²æ­¢r[2][1]å‡ºçŽ°å¤§äºŽ1çš„æƒ…å†µ
 	if (isnan(c))
 		c = 0.0f;
 	XMFLOAT3 rotation;
@@ -172,4 +203,20 @@ XMFLOAT3 Transform::GetEulerAnglesFromRotationMatrix(const XMFLOAT4X4& rotationM
 	rotation.x = atan2f(-rotationMatrix(2, 1), c);
 	rotation.y = atan2f(rotationMatrix(2, 0), rotationMatrix(2, 2));
 	return rotation;
+}
+
+Transform* Transform::GetParent()
+{
+	return m_Parnet;
+}
+
+void Transform::SetParent(Transform* parent)
+{
+	parent->AddChild(this);
+}
+
+void Transform::AddChild(Transform* child)
+{
+	child->m_Parnet = this;
+	m_Childs.push_back(child);
 }

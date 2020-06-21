@@ -2,6 +2,7 @@
 #include "d3dUtil.h"
 #include "DXTrace.h"
 #include "DDSTextureLoader.h"
+#include "Input.h"
 using namespace DirectX;
 
 GameApp::GameApp(HINSTANCE hInstance)
@@ -29,8 +30,7 @@ bool GameApp::Init()
 		return false;
 
 	// 初始化鼠标，键盘不需要
-	m_pMouse->SetWindow(m_hMainWnd);
-	m_pMouse->SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+	Input::Instance()->Init(m_hMainWnd);
 
 	return true;
 }
@@ -56,85 +56,34 @@ void GameApp::UpdateScene(float dt)
 {
 	static float phi = 0.0f, theta = 0.0f, x = 0.0f, z = 0.0f;
 
-	// 获取鼠标状态
-	Mouse::State mouseState = m_pMouse->GetState();
-	Mouse::State lastMouseState = m_MouseTracker.GetLastState();
-	// 获取键盘状态
-	Keyboard::State keyState = m_pKeyboard->GetState();
-	Keyboard::State lastKeyState = m_KeyboardTracker.GetLastState();
-
-	m_MouseTracker.Update(mouseState);
-	m_KeyboardTracker.Update(keyState);
+	Input::Instance()->OnUpdate();
 
 	// 键盘切换光栅化状态
-	if (m_KeyboardTracker.IsKeyPressed(Keyboard::L))
+	if (Input::Instance()->IsKeyPressed(Keyboard::L))
 	{
 		m_IsWireframeMode = !m_IsWireframeMode;
 		m_pd3dImmediateContext->RSSetState(m_IsWireframeMode ? m_pRSWireframe.Get() : nullptr);
 	}
 
-	if (mouseState.leftButton == true && m_MouseTracker.leftButton == m_MouseTracker.HELD)
-	{
-		theta -= (mouseState.x - lastMouseState.x) * 0.01f;
-		phi -= (mouseState.y - lastMouseState.y) * 0.01f;
-	}
-	if (keyState.IsKeyDown(Keyboard::W))
+	if (Input::Instance()->IsKeyDown(Keyboard::W))
 		z += dt * 2;
-	if (keyState.IsKeyDown(Keyboard::S))
+	if (Input::Instance()->IsKeyDown(Keyboard::S))
 		z -= dt * 2;
-	if (keyState.IsKeyDown(Keyboard::A))
+	if (Input::Instance()->IsKeyDown(Keyboard::A))
 		x -= dt * 2;
-	if (keyState.IsKeyDown(Keyboard::D))
+	if (Input::Instance()->IsKeyDown(Keyboard::D))
 		x += dt * 2;
 
-	Transform& woodTransform = m_WoodCrate.GetTransform();
-
-	auto camera = std::dynamic_pointer_cast<FirstPersonCamera>(m_pCamera);
-
-	// 第一人称/自由摄像机的操作
-
-		// 方向移动
-	if (keyState.IsKeyDown(Keyboard::W))
-	{
-		camera->Walk(dt * 6.0f);
-		//camera->MoveForward(dt * 6.0f);
-	}
-	if (keyState.IsKeyDown(Keyboard::S))
-	{
-		camera->Walk(dt * -6.0f);
-	}
-	if (keyState.IsKeyDown(Keyboard::A))
-		camera->Strafe(dt * -6.0f);
-	if (keyState.IsKeyDown(Keyboard::D))
-		camera->Strafe(dt * 6.0f);
-
-	// 将摄像机位置限制在[-8.9, 8.9]x[-8.9, 8.9]x[0.0, 8.9]的区域内
-	// 不允许穿地
-	XMFLOAT3 adjustedPos;
-	XMStoreFloat3(&adjustedPos, XMVectorClamp(camera->GetPositionXM(), XMVectorSet(-8.9f, 0.0f, -8.9f, 0.0f), XMVectorReplicate(8.9f)));
-	camera->SetPosition(adjustedPos);
-
-	// 仅在第一人称模式移动摄像机的同时移动箱子
-	woodTransform.SetPosition(adjustedPos);
-	// 在鼠标没进入窗口前仍为ABSOLUTE模式
-	if (mouseState.positionMode == Mouse::MODE_RELATIVE)
-	{
-		camera->Pitch(mouseState.y * dt * 2.5f);
-		camera->RotateY(mouseState.x * dt * 2.5f);
-	}
-
-	//camera->Pitch(mouseState.y * dt * 2.5f);
-	//camera->RotateY(mouseState.x * dt * 2.5f * (-0.0001f));
+	auto camera = std::dynamic_pointer_cast<FollowCamera>(m_pCamera);
+	camera->OnUpdate(dt);
+	m_Vehicle.OnUpdate(dt);
 
 	// 更新观察矩阵
 	XMStoreFloat4(&m_CBFrame.eyePos, m_pCamera->GetPositionXM());
 	m_CBFrame.view = XMMatrixTranspose(m_pCamera->GetViewXM());
 
-	// 重置滚轮值
-	m_pMouse->ResetScrollWheelValue();
-
 	// 退出程序，这里应向窗口发送销毁信息
-	if (keyState.IsKeyDown(Keyboard::Escape))
+	if (Input::Instance()->IsKeyDown(Keyboard::Escape))
 		SendMessage(MainWnd(), WM_DESTROY, 0, 0);
 
 	D3D11_MAPPED_SUBRESOURCE mappedData;
@@ -154,10 +103,8 @@ void GameApp::DrawScene()
 	//
 	// 绘制几何模型
 	//
-	m_WoodCrate.Draw(m_pd3dImmediateContext.Get());
 	m_Floor.Draw(m_pd3dImmediateContext.Get());
 	m_Vehicle.OnDraw(m_pd3dImmediateContext.Get());
-
 
 	HR(m_pSwapChain->Present(0, 0));
 }
@@ -209,17 +156,12 @@ bool GameApp::InitResource()
 	// ******************
 	// 初始游戏对象
 	ComPtr<ID3D11ShaderResourceView> texture;
-	// 初始化木箱
-	HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Texture\\WoodCrate.dds", nullptr, texture.GetAddressOf()));
-	m_WoodCrate.SetBuffer(m_pd3dDevice.Get(), Geometry::CreateBox());
-	m_WoodCrate.SetTexture(texture.Get());
-
 	// 初始化地板
 	HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Texture\\floor.dds", nullptr, texture.ReleaseAndGetAddressOf()));
 	m_Floor.SetBuffer(m_pd3dDevice.Get(),
 		Geometry::CreatePlane(XMFLOAT2(20.0f, 20.0f), XMFLOAT2(5.0f, 5.0f)));
 	m_Floor.SetTexture(texture.Get());
-	m_Floor.GetTransform().SetPosition(0.0f, -1.0f, 0.0f);
+	m_Floor.GetTransform()->SetLocalPosition(0.0f, -1.0f, 0.0f);
 
 	m_Vehicle = Vehicle();
 	m_Vehicle.Awake(m_pd3dDevice.Get());
@@ -239,10 +181,15 @@ bool GameApp::InitResource()
 	// ******************
 	// 初始化常量缓冲区的值
 	// 初始化每帧可能会变化的值
-	auto camera = std::shared_ptr<FirstPersonCamera>(new FirstPersonCamera);
+	/*auto camera = std::shared_ptr<FirstPersonCamera>(new FirstPersonCamera);
 	m_pCamera = camera;
 	camera->SetViewPort(0.0f, 0.0f, (float)m_ClientWidth, (float)m_ClientHeight);
-	camera->LookAt(XMFLOAT3(), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	camera->LookAt(XMFLOAT3(), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));*/
+
+	auto camera = std::shared_ptr<FollowCamera>(new FollowCamera);
+	m_pCamera = camera;
+	camera->SetViewPort(0.0f, 0.0f, (float)m_ClientWidth, (float)m_ClientHeight);
+	camera->SetTarget(m_Vehicle.main.GetTransform());
 
 	// 初始化仅在窗口大小变动时修改的值
 	m_pCamera->SetFrustum(XM_PI / 3, AspectRatio(), 0.5f, 1000.0f);
@@ -320,7 +267,6 @@ bool GameApp::InitResource()
 	D3D11SetDebugObjectName(m_pPixelShader3D.Get(), "Basic_PS_3D");
 	D3D11SetDebugObjectName(m_pSamplerState.Get(), "SSLinearWrap");
 	m_Floor.SetDebugObjectName("Floor");
-	m_WoodCrate.SetDebugObjectName("WoodCrate");
 
 	return true;
 }

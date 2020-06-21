@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "Input.h"
 using namespace DirectX;
 
 Camera::~Camera()
@@ -100,11 +101,47 @@ void Camera::SetViewPort(float topLeftX, float topLeftY, float width, float heig
 }
 
 // ******************
-// ��һ�˳�/�����ӽ������
+// 第一人称/自由视角摄像机
 //
 
 FirstPersonCamera::~FirstPersonCamera()
 {
+}
+
+void FirstPersonCamera::OnUpdate(float dt)
+{
+	// 第一人称/自由摄像机的操作
+
+		// 方向移动
+	if (Input::Instance()->IsKeyDown(Keyboard::W))
+	{
+		Walk(dt * 6.0f);
+		//camera->MoveForward(dt * 6.0f);
+	}
+	if (Input::Instance()->IsKeyDown(Keyboard::S))
+	{
+		Walk(dt * -6.0f);
+	}
+	if (Input::Instance()->IsKeyDown(Keyboard::A))
+		Strafe(dt * -6.0f);
+	if (Input::Instance()->IsKeyDown(Keyboard::D))
+		Strafe(dt * 6.0f);
+
+	// 将摄像机位置限制在[-8.9, 8.9]x[-8.9, 8.9]x[0.0, 8.9]的区域内
+	// 不允许穿地
+	XMFLOAT3 adjustedPos;
+	XMStoreFloat3(&adjustedPos, XMVectorClamp(GetPositionXM(), XMVectorSet(-8.9f, 0.0f, -8.9f, 0.0f), XMVectorReplicate(8.9f)));
+	SetPosition(adjustedPos);
+
+	// 在鼠标没进入窗口前仍为ABSOLUTE模式
+	/*if (mouseState.positionMode == Mouse::MODE_RELATIVE)
+	{
+		camera->Pitch(mouseState.y * dt * 2.5f);
+		camera->RotateY(mouseState.x * dt * 2.5f);
+	}*/
+
+	//camera->Pitch(mouseState.y * dt * 2.5f);
+	//camera->RotateY(mouseState.x * dt * 2.5f * (-0.0001f));
 }
 
 void FirstPersonCamera::SetPosition(float x, float y, float z)
@@ -114,18 +151,18 @@ void FirstPersonCamera::SetPosition(float x, float y, float z)
 
 void FirstPersonCamera::SetPosition(const XMFLOAT3& pos)
 {
-	m_Transform.SetPosition(pos);
+	m_Transform.SetLocalPosition(pos);
 }
 
 void FirstPersonCamera::LookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up)
 {
-	m_Transform.SetPosition(pos);
+	m_Transform.SetLocalPosition(pos);
 	m_Transform.LookAt(target, up);
 }
 
 void FirstPersonCamera::LookTo(const XMFLOAT3& pos, const XMFLOAT3& to, const XMFLOAT3& up)
 {
-	m_Transform.SetPosition(pos);
+	m_Transform.SetLocalPosition(pos);
 	m_Transform.LookTo(to, up);
 }
 
@@ -151,7 +188,7 @@ void FirstPersonCamera::MoveForward(float d)
 void FirstPersonCamera::Pitch(float rad)
 {
 	XMFLOAT3 rotation = m_Transform.GetRotation();
-	// ����x����ת����������[-7pi/18, 7pi/18]֮��
+	// 将绕x轴旋转弧度限制在[-7pi/18, 7pi/18]之间
 	rotation.x += rad;
 	if (rotation.x > XM_PI * 7 / 18)
 		rotation.x = XM_PI * 7 / 18;
@@ -166,4 +203,27 @@ void FirstPersonCamera::RotateY(float rad)
 	XMFLOAT3 rotation = m_Transform.GetRotation();
 	rotation.y = XMScalarModAngle(rotation.y + rad);
 	m_Transform.SetRotation(rotation);
+}
+
+void FollowCamera::SetTarget(Transform* target)
+{
+	m_Target = target;
+}
+
+void FollowCamera::OnUpdate(float dt)
+{
+	auto targetPos = m_Target->GetPosition();
+	auto forward = m_Target->GetForwardAxis();
+	
+	XMVECTOR directionVec = XMVector3Normalize(XMLoadFloat3(&m_Target->GetForwardAxis()));
+	XMVECTOR newPosition = XMVectorMultiplyAdd(XMVectorReplicate(5), -directionVec, XMLoadFloat3(&targetPos));
+
+	XMFLOAT3 pos;
+	XMStoreFloat3(&pos, newPosition);
+	pos.y = targetPos.y + 3;
+
+	pos = Lerp(m_Transform.GetPosition(), pos, dt * 5); // 插值
+
+	m_Transform.SetLocalPosition(pos);
+	m_Transform.LookAt(targetPos);
 }

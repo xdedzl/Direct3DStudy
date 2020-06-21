@@ -1,9 +1,9 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 #include <d3d11_1.h>
 #include <DirectXMath.h>
 #include "Transform.h"
+using namespace DirectX;
 
 class Camera
 {
@@ -12,23 +12,23 @@ public:
 	virtual ~Camera() = 0;
 
 	//
-	// »ñÈ¡ÉãÏñ»úÎ»ÖÃ
+	// è·å–æ‘„åƒæœºä½ç½®
 	//
 
 	DirectX::XMVECTOR GetPositionXM() const;
 	DirectX::XMFLOAT3 GetPosition() const;
 
 	//
-	// »ñÈ¡ÉãÏñ»úĞı×ª
+	// è·å–æ‘„åƒæœºæ—‹è½¬
 	//
 
-	// »ñÈ¡ÈÆXÖáĞı×ªµÄÅ·À­½Ç»¡¶È
+	// è·å–ç»•Xè½´æ—‹è½¬çš„æ¬§æ‹‰è§’å¼§åº¦
 	float GetRotationX() const;
-	// »ñÈ¡ÈÆYÖáĞı×ªµÄÅ·À­½Ç»¡¶È
+	// è·å–ç»•Yè½´æ—‹è½¬çš„æ¬§æ‹‰è§’å¼§åº¦
 	float GetRotationY() const;
 
 	//
-	// »ñÈ¡ÉãÏñ»úµÄ×ø±êÖáÏòÁ¿
+	// è·å–æ‘„åƒæœºçš„åæ ‡è½´å‘é‡
 	//
 
 	DirectX::XMVECTOR GetRightAxisXM() const;
@@ -39,64 +39,102 @@ public:
 	DirectX::XMFLOAT3 GetLookAxis() const;
 
 	//
-	// »ñÈ¡¾ØÕó
+	// è·å–çŸ©é˜µ
 	//
 
 	DirectX::XMMATRIX GetViewXM() const;
 	DirectX::XMMATRIX GetProjXM() const;
 	DirectX::XMMATRIX GetViewProjXM() const;
 
-	// »ñÈ¡ÊÓ¿Ú
+	// è·å–è§†å£
 	D3D11_VIEWPORT GetViewPort() const;
 
-	// ÉèÖÃÊÓ×¶Ìå
+	// è®¾ç½®è§†é”¥ä½“
 	void SetFrustum(float fovY, float aspect, float nearZ, float farZ);
 
-	// ÉèÖÃÊÓ¿Ú
+	// è®¾ç½®è§†å£
 	void SetViewPort(const D3D11_VIEWPORT& viewPort);
 	void SetViewPort(float topLeftX, float topLeftY, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
+	virtual void OnUpdate(float dt) {}
 
 protected:
 
-	// ÉãÏñ»úµÄ±ä»»
+	// æ‘„åƒæœºçš„å˜æ¢
 	Transform m_Transform = {};
 
-	// ÊÓ×¶ÌåÊôĞÔ
+	// è§†é”¥ä½“å±æ€§
 	float m_NearZ = 0.0f;
 	float m_FarZ = 0.0f;
 	float m_Aspect = 0.0f;
 	float m_FovY = 0.0f;
 
-	// µ±Ç°ÊÓ¿Ú
+	// å½“å‰è§†å£
 	D3D11_VIEWPORT m_ViewPort = {};
 };
 
+/// <summary>
+/// ç¬¬ä¸€äººç§°ç›¸æœº
+/// </summary>
 class FirstPersonCamera : public Camera
 {
 public:
 	FirstPersonCamera() = default;
 	~FirstPersonCamera() override;
 
-	// ÉèÖÃÉãÏñ»úÎ»ÖÃ
+	void OnUpdate(float dt) override;
+	// è®¾ç½®æ‘„åƒæœºä½ç½®
 	void SetPosition(float x, float y, float z);
 	void SetPosition(const DirectX::XMFLOAT3& pos);
-	// ÉèÖÃÉãÏñ»úµÄ³¯Ïò
+	// è®¾ç½®æ‘„åƒæœºçš„æœå‘
 	void LookAt(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
 	void LookTo(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& to, const DirectX::XMFLOAT3& up);
-	// Æ½ÒÆ
+	// å¹³ç§»
 	void Strafe(float d);
-	// Ö±ĞĞ(Æ½ÃæÒÆ¶¯)
+	// ç›´è¡Œ(å¹³é¢ç§»åŠ¨)
 	void Walk(float d);
-	// Ç°½ø(³¯Ç°ÏòÒÆ¶¯)
+	// å‰è¿›(æœå‰å‘ç§»åŠ¨)
 	void MoveForward(float d);
-	// ÉÏÏÂ¹Û²ì
-	// ÕıradÖµÏòÉÏ¹Û²ì
-	// ¸ºradÖµÏòÏÂ¹Û²ì
+	// ä¸Šä¸‹è§‚å¯Ÿ
+	// æ­£radå€¼å‘ä¸Šè§‚å¯Ÿ
+	// è´Ÿradå€¼å‘ä¸‹è§‚å¯Ÿ
 	void Pitch(float rad);
-	// ×óÓÒ¹Û²ì
-	// ÕıradÖµÏò×ó¹Û²ì
-	// ¸ºradÖµÏòÓÒ¹Û²ì
+	// å·¦å³è§‚å¯Ÿ
+	// æ­£radå€¼å‘å·¦è§‚å¯Ÿ
+	// è´Ÿradå€¼å‘å³è§‚å¯Ÿ
 	void RotateY(float rad);
 };
 
-#endif
+/// <summary>
+/// è·Ÿéšç›¸æœº
+/// </summary>
+class FollowCamera : public Camera
+{
+public:
+	FollowCamera() = default;
+	~FollowCamera() override {}
+	void SetTarget(Transform* target);
+	void OnUpdate(float dt) override;
+
+private:
+	Transform* m_Target;
+	static XMFLOAT3 Lerp(XMFLOAT3 x, XMFLOAT3 y, float s)
+	{
+		auto plus = Mul(Sub(y, x), s);
+		return Add(x, plus);
+	}
+
+	static XMFLOAT3 Sub(XMFLOAT3 v1, XMFLOAT3 v2)
+	{
+		return XMFLOAT3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+	}
+
+	static XMFLOAT3 Add(XMFLOAT3 v1, XMFLOAT3 v2)
+	{
+		return XMFLOAT3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+	}
+
+	static XMFLOAT3 Mul(XMFLOAT3 v1, float s)
+	{
+		return XMFLOAT3(v1.x * s, v1.y * s, v1.z * s);
+	}
+};
