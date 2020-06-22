@@ -116,12 +116,12 @@ void Transform::SetScale(float x, float y, float z)
 	m_Scale = XMFLOAT3(x, y, z);
 }
 
-void Transform::SetRotation(const XMFLOAT3& eulerAnglesInRadian)
+void Transform::SetLocalRotation(const XMFLOAT3& eulerAnglesInRadian)
 {
 	m_Rotation = eulerAnglesInRadian;
 }
 
-void Transform::SetRotation(float x, float y, float z)
+void Transform::SetLocalRotation(float x, float y, float z)
 {
 	m_Rotation = XMFLOAT3(x, y, z);
 }

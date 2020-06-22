@@ -196,14 +196,14 @@ void FirstPersonCamera::Pitch(float rad)
 	else if (rotation.x < -XM_PI * 7 / 18)
 		rotation.x = -XM_PI * 7 / 18;
 
-	m_Transform.SetRotation(rotation);
+	m_Transform.SetLocalRotation(rotation);
 }
 
 void FirstPersonCamera::RotateY(float rad)
 {
 	XMFLOAT3 rotation = m_Transform.GetRotation();
 	rotation.y = XMScalarModAngle(rotation.y + rad);
-	m_Transform.SetRotation(rotation);
+	m_Transform.SetLocalRotation(rotation);
 }
 
 void FollowCamera::SetTarget(Transform* target)

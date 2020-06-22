@@ -2,6 +2,7 @@
 #include <DirectXMath.h>
 #include <list>
 using namespace std;
+using namespace DirectX;
 
 class Transform
 {
@@ -50,10 +51,10 @@ public:
 
 	// 设置对象欧拉角(弧度制)
 	// 对象将以Z-X-Y轴顺序旋转
-	void SetRotation(const DirectX::XMFLOAT3& eulerAnglesInRadian);
+	void SetLocalRotation(const DirectX::XMFLOAT3& eulerAnglesInRadian);
 	// 设置对象欧拉角(弧度制)
 	// 对象将以Z-X-Y轴顺序旋转
-	void SetRotation(float x, float y, float z);
+	void SetLocalRotation(float x, float y, float z);
 
 	// 设置对象位置
 	void SetLocalPosition(const DirectX::XMFLOAT3& position);
@@ -80,6 +81,8 @@ public:
 	void AddChild(Transform* child);
 
 	__declspec(property(get = GetParent, put = SetParent)) Transform* parent;
+	__declspec(property(get = GetLocalPosition, put = SetLocalPosition)) XMFLOAT3 localPosition;
+	__declspec(property(get = GetLocalRotation, put = SetLocalRotation)) XMFLOAT3 localEulerAngles;
 
 private:
 	// 从旋转矩阵获取旋转欧拉角

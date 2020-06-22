@@ -26,7 +26,7 @@ void Vehicle::Awake(ID3D11Device* d3dDevice)
 		wheels[i].transform->SetParent(main.GetTransform());
 
 		XMFLOAT3 rotate = XMFLOAT3(0, 0, 90.0f * Deg2Rad);
-		wheels[i].transform->SetRotation(rotate);
+		wheels[i].transform->SetLocalRotation(rotate);
 	}
 
 	wheels[0].transform->SetLocalPosition(-1.0f, -1.0f, 2.0f);
@@ -94,8 +94,8 @@ void Vehicle::OnUpdate(float dt)
 	}
 	for (size_t i = 0; i < 2; i++)
 	{
-		XMFLOAT3 rotate = wheels[i].transform->GetLocalRotation();
+		XMFLOAT3 rotate = wheels[i].transform->localEulerAngles;
 		rotate = XMFLOAT3(rotate.x, Lerp(rotate.y, target, dt * 10), rotate.z);
-		wheels[i].transform->SetRotation(rotate);
+		wheels[i].transform->SetLocalRotation(rotate);
 	}
 }
