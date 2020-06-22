@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "Input.h"
+#include "XMath.h"
 using namespace DirectX;
 
 Camera::~Camera()
@@ -216,11 +217,11 @@ void FollowCamera::OnUpdate(float dt)
 	auto forward = m_Target->GetForwardAxis();
 	
 	XMVECTOR directionVec = XMVector3Normalize(XMLoadFloat3(&m_Target->GetForwardAxis()));
-	XMVECTOR newPosition = XMVectorMultiplyAdd(XMVectorReplicate(5), -directionVec, XMLoadFloat3(&targetPos));
+	XMVECTOR newPosition = XMVectorMultiplyAdd(XMVectorReplicate(6), -directionVec, XMLoadFloat3(&targetPos));
 
 	XMFLOAT3 pos;
 	XMStoreFloat3(&pos, newPosition);
-	pos.y = targetPos.y + 3;
+	pos.y = targetPos.y + 5;
 
 	pos = Lerp(m_Transform.GetPosition(), pos, dt * 5); // 插值
 

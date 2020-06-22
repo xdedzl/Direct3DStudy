@@ -1,14 +1,4 @@
-//***************************************************************************************
-// Geometry.h by X_Jun(MKXJun) (C) 2018-2020 All Rights Reserved.
-// Licensed under the MIT License.
-//
-// 生成常见的几何体网格模型
-// Generate common geometry meshes.
-//***************************************************************************************
-
-#ifndef GEOMETRY_H_
-#define GEOMETRY_H_
-
+#pragma once
 #include <vector>
 #include <string>
 #include <map>
@@ -695,9 +685,3 @@ namespace Geometry
 
 
 }
-
-
-
-#endif
-
-

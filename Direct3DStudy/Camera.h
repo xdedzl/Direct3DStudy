@@ -117,24 +117,5 @@ public:
 
 private:
 	Transform* m_Target;
-	static XMFLOAT3 Lerp(XMFLOAT3 x, XMFLOAT3 y, float s)
-	{
-		auto plus = Mul(Sub(y, x), s);
-		return Add(x, plus);
-	}
-
-	static XMFLOAT3 Sub(XMFLOAT3 v1, XMFLOAT3 v2)
-	{
-		return XMFLOAT3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-	}
-
-	static XMFLOAT3 Add(XMFLOAT3 v1, XMFLOAT3 v2)
-	{
-		return XMFLOAT3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
-	}
-
-	static XMFLOAT3 Mul(XMFLOAT3 v1, float s)
-	{
-		return XMFLOAT3(v1.x * s, v1.y * s, v1.z * s);
-	}
+	
 };

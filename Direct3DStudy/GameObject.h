@@ -26,6 +26,8 @@ public:
 	// 设置调试对象名
 	// 若缓冲区被重新设置，调试对象名也需要被重新设置
 	void SetDebugObjectName(const std::string& name);
+
+	__declspec(property(get = GetTransform)) Transform* transform;
 private:
 	template <class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;

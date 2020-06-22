@@ -79,6 +79,8 @@ public:
 	void SetParent(Transform* parent);
 	void AddChild(Transform* child);
 
+	__declspec(property(get = GetParent, put = SetParent)) Transform* parent;
+
 private:
 	// 从旋转矩阵获取旋转欧拉角
 	DirectX::XMFLOAT3 GetEulerAnglesFromRotationMatrix(const DirectX::XMFLOAT4X4& rotationMatrix);

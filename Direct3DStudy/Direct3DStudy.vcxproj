@@ -38,6 +38,7 @@
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Vehicle.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="XMath.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />

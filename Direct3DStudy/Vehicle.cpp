@@ -3,6 +3,7 @@
 #include "DDSTextureLoader.h"
 #include "GameObject.h"
 #include "Input.h"
+#include "XMath.h"
 
 using namespace DirectX;
 
@@ -12,23 +13,26 @@ void Vehicle::Awake(ID3D11Device* d3dDevice)
 {
 	ComPtr<ID3D11ShaderResourceView> texture;
 	(CreateDDSTextureFromFile(d3dDevice, L"Texture\\WoodCrate.dds", nullptr, texture.GetAddressOf()));
-	main.SetBuffer(d3dDevice, Geometry::CreateBox());
+	main.SetBuffer(d3dDevice, Geometry::CreateBox(2,2,4));
 	main.SetTexture(texture.Get());
-	main.GetTransform()->SetLocalPosition(-1.0f, 0.5f, 0.0f);
+	main.transform->SetLocalPosition(-1.0f, 0.5f, 0.0f);
 
 	for (size_t i = 0; i < 4; i++)
 	{
 		ComPtr<ID3D11ShaderResourceView> texture;
 		(CreateDDSTextureFromFile(d3dDevice, L"Texture\\WoodCrate.dds", nullptr, texture.GetAddressOf()));
-		wheels[i].SetBuffer(d3dDevice, Geometry::CreateSphere(0.5f));
+		wheels[i].SetBuffer(d3dDevice, Geometry::CreateCylinder(0.5f,0.2f));
 		wheels[i].SetTexture(texture.Get());
-		wheels[i].GetTransform()->SetParent(main.GetTransform());
+		wheels[i].transform->SetParent(main.GetTransform());
+
+		XMFLOAT3 rotate = XMFLOAT3(0, 0, 90.0f * Deg2Rad);
+		wheels[i].transform->SetRotation(rotate);
 	}
 
-	wheels[0].GetTransform()->SetLocalPosition(-1.0f, -1.0f, 1.0f);
-	wheels[1].GetTransform()->SetLocalPosition(1.0f, -1.0f, 1.0f);
-	wheels[2].GetTransform()->SetLocalPosition(1.0f, -1.0f, -1.0f);
-	wheels[3].GetTransform()->SetLocalPosition(-1.0f, -1.0f, -1.0f);
+	wheels[0].transform->SetLocalPosition(-1.0f, -1.0f, 2.0f);
+	wheels[1].transform->SetLocalPosition(1.0f, -1.0f, 2.0f);
+	wheels[2].transform->SetLocalPosition(1.0f, -1.0f, -2.0f);
+	wheels[3].transform->SetLocalPosition(-1.0f, -1.0f, -2.0f);
 }
 
 void Vehicle::OnDraw(ID3D11DeviceContext* d3dDeviceContext)
@@ -43,39 +47,25 @@ void Vehicle::OnDraw(ID3D11DeviceContext* d3dDeviceContext)
 
 void Vehicle::OnUpdate(float dt)
 {
-	/*if (Input::Instance()->IsKeyDown(Keyboard::Up))
-	{
-		auto pos = main.GetTransform().GetPosition();
-		pos.z += dt * 10;
-		main.GetTransform().SetPosition(pos);
-	}
-
-	if (Input::Instance()->IsKeyDown(Keyboard::Down))
-	{
-		auto pos = main.GetTransform().GetPosition();
-		pos.z -= dt * 10;
-		main.GetTransform().SetPosition(pos);
-	}*/
-
 	float speed = 0;
 	float rotateSpeed = 0;
 
-	if (Input::Instance()->IsKeyDown(Keyboard::Up))
+	if (Input::Instance()->IsKeyDown(Keyboard::Up)|| Input::Instance()->IsKeyDown(Keyboard::W))
 	{
 		speed += dt * 10;
 	}
 
-	if (Input::Instance()->IsKeyDown(Keyboard::Down))
+	if (Input::Instance()->IsKeyDown(Keyboard::Down) || Input::Instance()->IsKeyDown(Keyboard::S))
 	{
 		speed -= dt * 10;
 	}
 
-	if (Input::Instance()->IsKeyDown(Keyboard::Left))
+	if (Input::Instance()->IsKeyDown(Keyboard::Left) || Input::Instance()->IsKeyDown(Keyboard::A))
 	{
 		rotateSpeed -= dt * 5;
 	}
 
-	if (Input::Instance()->IsKeyDown(Keyboard::Right))
+	if (Input::Instance()->IsKeyDown(Keyboard::Right) || Input::Instance()->IsKeyDown(Keyboard::D))
 	{
 		rotateSpeed += dt * 5;
 	}
@@ -84,7 +74,28 @@ void Vehicle::OnUpdate(float dt)
 
 	transform->Translate(transform->GetForwardAxis(), speed);
 
-	XMFLOAT3 rotate = XMFLOAT3(0, rotateSpeed, 0);
+	if (speed != 0)
+	{
+		int sign = speed / abs(speed);
+		XMFLOAT3 mainRotate = XMFLOAT3(0, sign * rotateSpeed, 0);
+		transform->Rotate(mainRotate);
 
-	transform->Rotate(rotate);
+		XMFLOAT3 wheelRoatate = XMFLOAT3(speed, 0, 0);
+		for (size_t i = 0; i < 4; i++)
+		{
+			wheels[i].transform->Rotate(wheelRoatate);
+		}
+	}
+	float target = 0;
+	if (rotateSpeed != 0)
+	{
+		int sign = rotateSpeed / abs(rotateSpeed);
+		target = sign * 45 * Deg2Rad;
+	}
+	for (size_t i = 0; i < 2; i++)
+	{
+		XMFLOAT3 rotate = wheels[i].transform->GetLocalRotation();
+		rotate = XMFLOAT3(rotate.x, Lerp(rotate.y, target, dt * 10), rotate.z);
+		wheels[i].transform->SetRotation(rotate);
+	}
 }
