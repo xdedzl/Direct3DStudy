@@ -22,6 +22,9 @@
     <Filter Include="Core">
       <UniqueIdentifier>{1ccd1305-fee2-4c7b-a382-926abb50bc5a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Effect">
+      <UniqueIdentifier>{deb29ec6-5c8f-4c39-b4d0-2fbfe643a9f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dApp.h">
@@ -84,8 +87,17 @@
     <ClInclude Include="XMath.h">
       <Filter>通用文件</Filter>
     </ClInclude>
-    <ClInclude Include="Skybox.h">
+    <ClInclude Include="RenderStates.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Skybox.h">
+      <Filter>Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectHelper.h">
+      <Filter>Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects.h">
+      <Filter>Effect</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -137,8 +149,20 @@
     <ClCompile Include="Input.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Skybox.cpp">
+    <ClCompile Include="RenderStates.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyEffect.cpp">
+      <Filter>Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Skybox.cpp">
+      <Filter>Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicEffect.cpp">
+      <Filter>Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="XEffect.cpp">
+      <Filter>Effect</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +214,9 @@
       <Filter>着色器</Filter>
     </FxCompile>
     <FxCompile Include="HLSL\Sky_PS.hlsl">
+      <Filter>着色器</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\Basic_PS_3D_01.hlsl">
       <Filter>着色器</Filter>
     </FxCompile>
   </ItemGroup>

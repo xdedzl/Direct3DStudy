@@ -103,6 +103,7 @@ void GameApp::DrawScene()
 	//
 	// 绘制几何模型
 	//
+
 	m_Floor.Draw(m_pd3dImmediateContext.Get());
 	m_Vehicle.OnDraw(m_pd3dImmediateContext.Get());
 
@@ -116,6 +117,7 @@ bool GameApp::InitEffect()
 	// 创建顶点着色器(3D)
 	HR(CreateShaderFromFile(L"HLSL\\Basic_VS_3D.cso", L"HLSL\\Basic_VS_3D.hlsl", "VS_3D", "vs_5_0", blob.ReleaseAndGetAddressOf()));
 	HR(m_pd3dDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pVertexShader3D.GetAddressOf()));
+
 	// 创建顶点布局(3D)
 	HR(m_pd3dDevice->CreateInputLayout(VertexPosNormalTex::inputLayout, ARRAYSIZE(VertexPosNormalTex::inputLayout),
 		blob->GetBufferPointer(), blob->GetBufferSize(), m_pVertexLayout3D.GetAddressOf()));
@@ -254,19 +256,6 @@ bool GameApp::InitResource()
 	m_pd3dImmediateContext->PSSetConstantBuffers(3, 1, m_pConstantBuffers[3].GetAddressOf());
 	m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
 	m_pd3dImmediateContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
-
-	// ******************
-	// 设置调试对象名
-	//
-	D3D11SetDebugObjectName(m_pVertexLayout3D.Get(), "VertexPosNormalTexLayout");
-	D3D11SetDebugObjectName(m_pConstantBuffers[0].Get(), "CBDrawing");
-	D3D11SetDebugObjectName(m_pConstantBuffers[1].Get(), "CBFrame");
-	D3D11SetDebugObjectName(m_pConstantBuffers[2].Get(), "CBOnResize");
-	D3D11SetDebugObjectName(m_pConstantBuffers[3].Get(), "CBRarely");
-	D3D11SetDebugObjectName(m_pVertexShader3D.Get(), "Basic_VS_3D");
-	D3D11SetDebugObjectName(m_pPixelShader3D.Get(), "Basic_PS_3D");
-	D3D11SetDebugObjectName(m_pSamplerState.Get(), "SSLinearWrap");
-	m_Floor.SetDebugObjectName("Floor");
 
 	return true;
 }

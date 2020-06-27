@@ -31,20 +31,3 @@ struct CBChangesRarely
 	int numSpotLight;
 	float pad;			// 打包保证16字节对齐
 };
-
-struct VSConstantBuffer
-{
-	DirectX::XMMATRIX world;
-	DirectX::XMMATRIX view;
-	DirectX::XMMATRIX proj;
-	DirectX::XMMATRIX worldInvTranspose;
-};
-
-struct PSConstantBuffer
-{
-	DirectionalLight dirLight;
-	PointLight pointLight;
-	SpotLight spotLight;
-	Material material;
-	DirectX::XMFLOAT4 eyePos;
-};

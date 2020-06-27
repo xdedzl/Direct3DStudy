@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "GameObject.h"
 #include "Vehicle.h"
+#include "Effects.h"
 
 class GameApp : public D3DApp
 {
@@ -30,6 +31,7 @@ private:
 
 
 private:
+	XEffect m_XEffect;
 	ComPtr<ID3D11InputLayout> m_pVertexLayout3D;	// 用于3D的顶点输入布局
 	ComPtr<ID3D11Buffer> m_pConstantBuffers[4];		// 常量缓冲区
 
