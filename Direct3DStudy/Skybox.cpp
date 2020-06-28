@@ -1,72 +1,60 @@
 #include "Skybox.h"
-#include "Geometry.h"
-#include "d3dUtil.h"
-#include "DDSTextureLoader.h"
-
+#include "ConstantBufferStruct.h"
+#include "DXTrace.h"
 using namespace DirectX;
-using namespace Microsoft::WRL;
 
-HRESULT Skybox::InitResource(ID3D11Device* device, ID3D11DeviceContext* deviceContext, wstring& cubemapFilename, float skySphereRadius, bool gengerateMips)
+Skybox::Skybox()
+	: m_IndexCount(), m_VertexStride()
 {
-	m_pIndexBuffer.Reset();
-	m_pVertexBuffer.Reset();
-	m_pTextureCubeSRV.Reset();
-
-	HRESULT hr;
-
-	hr = CreateDDSTextureFromFile(device, gengerateMips ? deviceContext : nullptr, cubemapFilename.c_str(), nullptr, m_pTextureCubeSRV.GetAddressOf());
-
-	if (FAILED(hr))
-		return hr;
-
-	return InitResource(device, skySphereRadius);
 }
 
-void Skybox::Draw(ID3D11DeviceContext* deviceContext, const Camera& camera)
+Transform* Skybox::GetTransform()
 {
-	UINT strides[1] = { sizeof(XMFLOAT3) };
-	UINT offsets[1] = { 0 };
-	deviceContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), strides, offsets);
+	return &m_Transform;
+}
+
+void Skybox::SetTexture(ID3D11ShaderResourceView* texture)
+{
+	m_pTexture = texture;
+}
+
+void Skybox::Draw(ID3D11DeviceContext* deviceContext)
+{
+	// 设置顶点/索引缓冲区
+	UINT strides = m_VertexStride;
+	UINT offsets = 0;
+	deviceContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &strides, &offsets);
 	deviceContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-	XMFLOAT3 pos = camera.GetPosition();
+	// 获取之前已经绑定到渲染管线上的常量缓冲区并进行修改
+	ComPtr<ID3D11Buffer> cBuffer = nullptr;
+	deviceContext->VSGetConstantBuffers(0, 1, cBuffer.GetAddressOf());
+	CBChangesEveryDrawing cbDrawing;
 
+	// 内部进行转置
+	XMMATRIX W = m_Transform.GetLocalToWorldMatrixXM();
+	cbDrawing.world = XMMatrixTranspose(W);
+	cbDrawing.worldInvTranspose = XMMatrixInverse(nullptr, W);	// 两次转置抵消
 
+	// 更新常量缓冲区
+	D3D11_MAPPED_SUBRESOURCE mappedData;
+	HR(deviceContext->Map(cBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+	memcpy_s(mappedData.pData, sizeof(CBChangesEveryDrawing), &cbDrawing, sizeof(CBChangesEveryDrawing));
+	deviceContext->Unmap(cBuffer.Get(), 0);
+
+	// 设置纹理
+	//deviceContext->PSSetShaderResources(0, 1, m_pTexture.GetAddressOf());
+	deviceContext->PSSetShaderResources(1, 1, m_pTexture.GetAddressOf());
+	// 可以开始绘制
+	deviceContext->DrawIndexed(m_IndexCount, 0, 0);
 }
 
-HRESULT Skybox::InitResource(ID3D11Device* device, float skySphereRadius)
+void Skybox::SetDebugObjectName(const std::string& name)
 {
-	HRESULT hr;
-	auto sphere = Geometry::CreateSphere<VertexPos>(skySphereRadius);
-
-	// vertex buffer
-	D3D11_BUFFER_DESC vbd;
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(XMFLOAT3) * (UINT)sphere.vertexVec.size();
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.CPUAccessFlags = 0;
-	vbd.MiscFlags = 0;
-	vbd.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA InitData;
-	InitData.pSysMem = sphere.vertexVec.data();
-
-	hr = device->CreateBuffer(&vbd, &InitData, &m_pVertexBuffer);
-	if (FAILED(hr))
-		return hr;
-
-	// index buffer
-	m_IndexCount = (UINT)sphere.indexVec.size();
-
-	D3D11_BUFFER_DESC ibd;
-	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(DWORD) * m_IndexCount;
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.CPUAccessFlags = 0;
-	ibd.StructureByteStride = 0;
-	ibd.MiscFlags = 0;
-
-	InitData.pSysMem = sphere.indexVec.data();
-
-	return device->CreateBuffer(&ibd, &InitData, &m_pIndexBuffer);
+#if (defined(DEBUG) || defined(_DEBUG)) && (GRAPHICS_DEBUGGER_OBJECT_NAME)
+	D3D11SetDebugObjectName(m_pVertexBuffer.Get(), name + ".VertexBuffer");
+	D3D11SetDebugObjectName(m_pIndexBuffer.Get(), name + ".IndexBuffer");
+#else
+	UNREFERENCED_PARAMETER(name);
+#endif
 }
