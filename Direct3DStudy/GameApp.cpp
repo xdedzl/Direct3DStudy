@@ -23,6 +23,8 @@ bool GameApp::Init()
 	if (!D3DApp::Init())
 		return false;
 
+	RenderStates::InitAll(m_pd3dDevice.Get());
+
 	if (!InitEffect())
 		return false;
 
@@ -62,7 +64,14 @@ void GameApp::UpdateScene(float dt)
 	if (Input::Instance()->IsKeyPressed(Keyboard::L))
 	{
 		m_IsWireframeMode = !m_IsWireframeMode;
-		m_pd3dImmediateContext->RSSetState(m_IsWireframeMode ? m_pRSWireframe.Get() : nullptr);
+		if (m_IsWireframeMode)
+			m_pd3dImmediateContext->RSSetState(RenderStates::RSWireframe.Get());
+		else
+			m_pd3dImmediateContext->RSSetState(nullptr);
+	}
+	if (Input::Instance()->IsKeyPressed(Keyboard::J))
+	{
+		m_pd3dImmediateContext->RSSetState(RenderStates::RSNoCull.Get());
 	}
 
 	if (Input::Instance()->IsKeyDown(Keyboard::W))
@@ -76,6 +85,8 @@ void GameApp::UpdateScene(float dt)
 
 	auto camera = std::dynamic_pointer_cast<FollowCamera>(m_pCamera);
 	camera->OnUpdate(dt);
+	m_Skybox.GetTransform()->SetLocalPosition(m_pCamera->GetPosition());
+
 	m_Vehicle.OnUpdate(dt);
 
 	// 更新观察矩阵
@@ -100,9 +111,29 @@ void GameApp::DrawScene()
 	m_pd3dImmediateContext->ClearRenderTargetView(m_pRenderTargetView.Get(), reinterpret_cast<const float*>(&Colors::Black));
 	m_pd3dImmediateContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	//
-	// 绘制几何模型
-	//
+	
+	// draw skybox
+	m_pd3dImmediateContext->IASetInputLayout(m_SkyboxInputLayout.Get());
+	m_pd3dImmediateContext->VSSetShader(m_SkyboxVS.Get(), nullptr, 0);
+	m_pd3dImmediateContext->PSSetShader(m_SkyboxPS.Get(), nullptr, 0);
+
+	m_pd3dImmediateContext->RSSetState(RenderStates::RSNoCull.Get());
+	m_pd3dImmediateContext->PSSetSamplers(0, 1, RenderStates::SSLinearWrap.GetAddressOf());
+	m_pd3dImmediateContext->OMSetDepthStencilState(RenderStates::DSSLessEqual.Get(), 0);
+	m_pd3dImmediateContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+
+	m_Skybox.Draw(m_pd3dImmediateContext.Get());
+
+
+	// draw gameobject
+	m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout3D.Get());
+	m_pd3dImmediateContext->VSSetShader(m_pVertexShader3D.Get(), nullptr, 0);
+	m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
+
+	m_pd3dImmediateContext->RSSetState(nullptr);
+	m_pd3dImmediateContext->PSSetSamplers(0, 1, RenderStates::SSAnistropicWrap.GetAddressOf());
+	m_pd3dImmediateContext->OMSetDepthStencilState(nullptr, 0);
+	m_pd3dImmediateContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
 	m_Floor.Draw(m_pd3dImmediateContext.Get());
 	m_Vehicle.OnDraw(m_pd3dImmediateContext.Get());
@@ -125,6 +156,17 @@ bool GameApp::InitEffect()
 	// 创建像素着色器(3D)
 	HR(CreateShaderFromFile(L"HLSL\\Basic_PS_3D.cso", L"HLSL\\Basic_PS_3D.hlsl", "PS_3D", "ps_5_0", blob.ReleaseAndGetAddressOf()));
 	HR(m_pd3dDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pPixelShader3D.GetAddressOf()));
+
+
+	// skybox
+	CreateShaderFromFile(L"HLSL\\Sky_VS.cso", L"HLSL\\Sky_VS.hlsl", "VS", "vs_5_0", blob.ReleaseAndGetAddressOf());
+	HR(m_pd3dDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_SkyboxVS.GetAddressOf()));
+
+	HR(m_pd3dDevice->CreateInputLayout(VertexPos::inputLayout, ARRAYSIZE(VertexPos::inputLayout),
+		blob->GetBufferPointer(), blob->GetBufferSize(), m_SkyboxInputLayout.GetAddressOf()));
+
+	HR(CreateShaderFromFile(L"HLSL\\Sky_PS.cso", L"HLSL\\Sky_PS.hlsl", "PS", "ps_5_0", blob.ReleaseAndGetAddressOf()));
+	HR(m_pd3dDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_SkyboxPS.GetAddressOf()));
 
 	return true;
 }
@@ -155,16 +197,22 @@ bool GameApp::InitResource()
 	cbd.ByteWidth = sizeof(CBChangesRarely);
 	HR(m_pd3dDevice->CreateBuffer(&cbd, nullptr, m_pConstantBuffers[3].GetAddressOf()));
 
-	// ******************
-	// 初始游戏对象
+	// init skybox
+	m_Skybox.SetBuffer(m_pd3dDevice.Get(), Geometry::CreateSphere<VertexPos, DWORD>(10));
+	ComPtr<ID3D11ShaderResourceView> skyboxTexture;
+	HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Texture\\desert.dds", nullptr, skyboxTexture.ReleaseAndGetAddressOf()));
+	m_Skybox.SetTexture(skyboxTexture.Get());
+	m_Skybox.GetTransform()->SetLocalPosition(0.0f, 0.0f, 0.0f);
+
+	// init plane
 	ComPtr<ID3D11ShaderResourceView> texture;
-	// 初始化地板
 	HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Texture\\floor.dds", nullptr, texture.ReleaseAndGetAddressOf()));
 	m_Floor.SetBuffer(m_pd3dDevice.Get(),
 		Geometry::CreatePlane(XMFLOAT2(20.0f, 20.0f), XMFLOAT2(5.0f, 5.0f)));
 	m_Floor.SetTexture(texture.Get());
 	m_Floor.GetTransform()->SetLocalPosition(0.0f, -1.0f, 0.0f);
 
+	// init vehicle
 	m_Vehicle = Vehicle();
 	m_Vehicle.Awake(m_pd3dDevice.Get());
 
@@ -183,10 +231,6 @@ bool GameApp::InitResource()
 	// ******************
 	// 初始化常量缓冲区的值
 	// 初始化每帧可能会变化的值
-	/*auto camera = std::shared_ptr<FirstPersonCamera>(new FirstPersonCamera);
-	m_pCamera = camera;
-	camera->SetViewPort(0.0f, 0.0f, (float)m_ClientWidth, (float)m_ClientHeight);
-	camera->LookAt(XMFLOAT3(), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));*/
 
 	auto camera = std::shared_ptr<FollowCamera>(new FollowCamera);
 	m_pCamera = camera;
@@ -256,52 +300,6 @@ bool GameApp::InitResource()
 	m_pd3dImmediateContext->PSSetConstantBuffers(3, 1, m_pConstantBuffers[3].GetAddressOf());
 	m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
 	m_pd3dImmediateContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
-
-	return true;
-}
-
-bool GameApp::ResetMesh(const Geometry::MeshData<VertexPosNormalColor>& meshData)
-{
-	//// 释放旧资源
-	//m_pVertexBuffer.Reset();
-	//m_pIndexBuffer.Reset();
-
-	//// 设置顶点缓冲区描述
-	//D3D11_BUFFER_DESC vbd;
-	//ZeroMemory(&vbd, sizeof(vbd));
-	//vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	//vbd.ByteWidth = (UINT)meshData.vertexVec.size() * sizeof(VertexPosNormalColor);
-	//vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	//vbd.CPUAccessFlags = 0;
-	//// 新建顶点缓冲区
-	//D3D11_SUBRESOURCE_DATA InitData;
-	//ZeroMemory(&InitData, sizeof(InitData));
-	//InitData.pSysMem = meshData.vertexVec.data();
-	//HR(m_pd3dDevice->CreateBuffer(&vbd, &InitData, m_pVertexBuffer.GetAddressOf()));
-
-	//// 输入装配阶段的顶点缓冲区设置
-	//UINT stride = sizeof(VertexPosNormalColor);	// 跨越字节数
-	//UINT offset = 0;							// 起始偏移量
-
-	//m_pd3dImmediateContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
-
-	//// 设置索引缓冲区描述
-	//m_IndexCount = (UINT)meshData.indexVec.size();
-	//D3D11_BUFFER_DESC ibd;
-	//ZeroMemory(&ibd, sizeof(ibd));
-	//ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	//ibd.ByteWidth = m_IndexCount * sizeof(DWORD);
-	//ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	//ibd.CPUAccessFlags = 0;
-	//// 新建索引缓冲区
-	//InitData.pSysMem = meshData.indexVec.data();
-	//HR(m_pd3dDevice->CreateBuffer(&ibd, &InitData, m_pIndexBuffer.GetAddressOf()));
-	//// 输入装配阶段的索引缓冲区设置
-	//m_pd3dImmediateContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-	//// 设置调试对象名
-	//D3D11SetDebugObjectName(m_pVertexBuffer.Get(), "VertexBuffer");
-	//D3D11SetDebugObjectName(m_pIndexBuffer.Get(), "IndexBuffer");
 
 	return true;
 }

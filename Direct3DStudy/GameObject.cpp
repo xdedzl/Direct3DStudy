@@ -44,6 +44,7 @@ void GameObject::Draw(ID3D11DeviceContext* deviceContext)
 
 	// 设置纹理
 	deviceContext->PSSetShaderResources(0, 1, m_pTexture.GetAddressOf());
+	//deviceContext->PSSetShaderResources(1, 1, m_pTexture.GetAddressOf());
 	// 可以开始绘制
 	deviceContext->DrawIndexed(m_IndexCount, 0, 0);
 }

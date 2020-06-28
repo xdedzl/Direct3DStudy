@@ -1,7 +1,9 @@
 #include "LightHelper.hlsli"
 
 Texture2D g_Tex : register(t0);
+TextureCube g_TexCube : register(t1);
 SamplerState g_SamLinear : register(s0);
+SamplerState g_Sam : register(s0);
 
 
 cbuffer CBChangesEveryDrawing : register(b0)
@@ -32,7 +34,10 @@ cbuffer CBChangesRarely : register(b3)
 	int g_NumSpotLight;
 }
 
-
+cbuffer CBChangesSkyboxEveryFrame : register(b4)
+{
+	matrix g_WorldViewProj;
+}
 
 struct VertexPosNormalTex
 {
@@ -61,10 +66,18 @@ struct VertexPosHTex
 	float2 Tex : TEXCOORD;
 };
 
+// ---- skybox
 
+struct VertexPos
+{
+	float3 PosL : POSITION;
+};
 
-
-
+struct VertexPosHL
+{
+	float4 PosH : SV_POSITION;
+	float3 PosL : POSITION;
+};
 
 
 
