@@ -6,6 +6,7 @@
 #include "Geometry.h"
 #include "Camera.h"
 #include "GameObject.h"
+#include "EndlessLand.h"
 #include "Vehicle.h"
 #include "Effects.h"
 #include "Skybox.h"
@@ -28,16 +29,14 @@ public:
 private:
 	bool InitEffect();
 	bool InitResource();
-	bool ResetMesh(const Geometry::MeshData<VertexPosNormalColor>& meshData);
-
 
 private:
 	XEffect m_XEffect;
 	ComPtr<ID3D11Buffer> m_pConstantBuffers[4];		// 常量缓冲区
 
 	Skybox m_Skybox;
-	GameObject m_Floor;							    // 地板
 	Vehicle m_Vehicle;
+	EndlessLand m_EndlessLand;
 
 	ComPtr<ID3D11InputLayout> m_pVertexLayout3D;	// 用于3D的顶点输入布局
 	ComPtr<ID3D11VertexShader> m_pVertexShader3D;	// 顶点着色器

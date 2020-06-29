@@ -18,6 +18,8 @@ public:
 	DirectX::XMVECTOR GetPositionXM() const;
 	DirectX::XMFLOAT3 GetPosition() const;
 
+	Transform* GetTransform();
+
 	//
 	// 获取摄像机旋转
 	//
@@ -56,6 +58,8 @@ public:
 	void SetViewPort(const D3D11_VIEWPORT& viewPort);
 	void SetViewPort(float topLeftX, float topLeftY, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
 	virtual void OnUpdate(float dt) {}
+
+	__declspec(property(get = GetTransform)) Transform* transform;
 
 protected:
 

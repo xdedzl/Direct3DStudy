@@ -99,6 +99,9 @@
     <ClInclude Include="Effects.h">
       <Filter>Effect</Filter>
     </ClInclude>
+    <ClInclude Include="EndlessLand.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="d3dApp.cpp">
@@ -163,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="XEffect.cpp">
       <Filter>Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="EndlessLand.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

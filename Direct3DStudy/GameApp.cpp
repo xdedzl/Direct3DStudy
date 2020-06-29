@@ -87,6 +87,7 @@ void GameApp::UpdateScene(float dt)
 	camera->OnUpdate(dt);
 	m_Skybox.GetTransform()->SetLocalPosition(m_pCamera->GetPosition());
 
+	m_EndlessLand.OnUpdate(dt);
 	m_Vehicle.OnUpdate(dt);
 
 	// 更新观察矩阵
@@ -131,11 +132,11 @@ void GameApp::DrawScene()
 	m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
 
 	m_pd3dImmediateContext->RSSetState(nullptr);
-	m_pd3dImmediateContext->PSSetSamplers(0, 1, RenderStates::SSAnistropicWrap.GetAddressOf());
+	m_pd3dImmediateContext->PSSetSamplers(0, 1, RenderStates::SSLinearWrap.GetAddressOf());
 	m_pd3dImmediateContext->OMSetDepthStencilState(nullptr, 0);
 	m_pd3dImmediateContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
-	m_Floor.Draw(m_pd3dImmediateContext.Get());
+	m_EndlessLand.OnDraw(m_pd3dImmediateContext.Get());
 	m_Vehicle.OnDraw(m_pd3dImmediateContext.Get());
 
 	HR(m_pSwapChain->Present(0, 0));
@@ -197,6 +198,12 @@ bool GameApp::InitResource()
 	cbd.ByteWidth = sizeof(CBChangesRarely);
 	HR(m_pd3dDevice->CreateBuffer(&cbd, nullptr, m_pConstantBuffers[3].GetAddressOf()));
 
+	auto camera = std::shared_ptr<FollowCamera>(new FollowCamera);
+	m_pCamera = camera;
+	camera->SetViewPort(0.0f, 0.0f, (float)m_ClientWidth, (float)m_ClientHeight);
+	camera->SetTarget(m_Vehicle.main.GetTransform());
+	m_pCamera->SetFrustum(XM_PI / 3, AspectRatio(), 0.5f, 1000.0f);
+
 	// init skybox
 	m_Skybox.SetBuffer(m_pd3dDevice.Get(), Geometry::CreateSphere<VertexPos, DWORD>(10));
 	ComPtr<ID3D11ShaderResourceView> skyboxTexture;
@@ -204,13 +211,10 @@ bool GameApp::InitResource()
 	m_Skybox.SetTexture(skyboxTexture.Get());
 	m_Skybox.GetTransform()->SetLocalPosition(0.0f, 0.0f, 0.0f);
 
-	// init plane
-	ComPtr<ID3D11ShaderResourceView> texture;
-	HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Texture\\floor.dds", nullptr, texture.ReleaseAndGetAddressOf()));
-	m_Floor.SetBuffer(m_pd3dDevice.Get(),
-		Geometry::CreatePlane(XMFLOAT2(20.0f, 20.0f), XMFLOAT2(5.0f, 5.0f)));
-	m_Floor.SetTexture(texture.Get());
-	m_Floor.GetTransform()->SetLocalPosition(0.0f, -1.0f, 0.0f);
+	// init land
+	m_EndlessLand = EndlessLand();
+	m_EndlessLand.Awake(m_pd3dDevice.Get());
+	m_EndlessLand.SetTarget(m_pCamera->transform);
 
 	// init vehicle
 	m_Vehicle = Vehicle();
@@ -232,13 +236,7 @@ bool GameApp::InitResource()
 	// 初始化常量缓冲区的值
 	// 初始化每帧可能会变化的值
 
-	auto camera = std::shared_ptr<FollowCamera>(new FollowCamera);
-	m_pCamera = camera;
-	camera->SetViewPort(0.0f, 0.0f, (float)m_ClientWidth, (float)m_ClientHeight);
-	camera->SetTarget(m_Vehicle.main.GetTransform());
-
 	// 初始化仅在窗口大小变动时修改的值
-	m_pCamera->SetFrustum(XM_PI / 3, AspectRatio(), 0.5f, 1000.0f);
 	m_CBOnResize.proj = XMMatrixTranspose(m_pCamera->GetProjXM());
 
 	// 初始化不会变化的值
@@ -248,14 +246,14 @@ bool GameApp::InitResource()
 	m_CBRarely.dirLight[0].specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 	m_CBRarely.dirLight[0].direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
 	// 灯光
-	m_CBRarely.pointLight[0].position = XMFLOAT3(0.0f, 10.0f, 0.0f);
-	m_CBRarely.pointLight[0].ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	m_CBRarely.pointLight[0].diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
-	m_CBRarely.pointLight[0].specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	m_CBRarely.pointLight[0].att = XMFLOAT3(0.0f, 0.1f, 0.0f);
-	m_CBRarely.pointLight[0].range = 25.0f;
+	//m_CBRarely.pointLight[0].position = XMFLOAT3(0.0f, 10.0f, 0.0f);
+	//m_CBRarely.pointLight[0].ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	//m_CBRarely.pointLight[0].diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	//m_CBRarely.pointLight[0].specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	//m_CBRarely.pointLight[0].att = XMFLOAT3(0.0f, 0.1f, 0.0f);
+	//m_CBRarely.pointLight[0].range = 25.0f;
 	m_CBRarely.numDirLight = 1;
-	m_CBRarely.numPointLight = 1;
+	m_CBRarely.numPointLight = 0;
 	m_CBRarely.numSpotLight = 0;
 	// 初始化材质
 	m_CBRarely.material.ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);

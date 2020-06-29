@@ -28,6 +28,7 @@
     <ClInclude Include="DXTrace.h" />
     <ClInclude Include="Effects.h" />
     <ClInclude Include="EffectHelper.h" />
+    <ClInclude Include="EndlessLand.h" />
     <ClInclude Include="GameApp.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameTimer.h" />
@@ -52,6 +53,7 @@
     <ClCompile Include="d3dUtil.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="DXTrace.cpp" />
+    <ClCompile Include="EndlessLand.cpp" />
     <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameTimer.cpp" />

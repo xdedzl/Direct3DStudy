@@ -17,6 +17,11 @@ XMFLOAT3 Camera::GetPosition() const
 	return m_Transform.GetPosition();
 }
 
+Transform* Camera::GetTransform()
+{
+	return &m_Transform;
+}
+
 float Camera::GetRotationX() const
 {
 	return m_Transform.GetRotation().x;
@@ -221,7 +226,7 @@ void FollowCamera::OnUpdate(float dt)
 
 	XMFLOAT3 pos;
 	XMStoreFloat3(&pos, newPosition);
-	pos.y = targetPos.y + 5;
+	pos.y = targetPos.y + 2;
 
 	pos = Lerp(m_Transform.GetPosition(), pos, dt * 5); // 插值
 

@@ -23,7 +23,7 @@ void Vehicle::Awake(ID3D11Device* d3dDevice)
 		(CreateDDSTextureFromFile(d3dDevice, L"Texture\\WoodCrate.dds", nullptr, texture.GetAddressOf()));
 		wheels[i].SetBuffer(d3dDevice, Geometry::CreateCylinder(0.5f,0.2f));
 		wheels[i].SetTexture(texture.Get());
-		wheels[i].transform->SetParent(main.GetTransform());
+		wheels[i].transform->SetParent(main.transform);
 
 		XMFLOAT3 rotate = XMFLOAT3(0, 0, 90.0f * Deg2Rad);
 		wheels[i].transform->SetLocalRotation(rotate);

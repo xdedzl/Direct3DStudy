@@ -50,5 +50,5 @@ float4 PS_3D(VertexPosHWNormalTex pIn) : SV_Target
 	float4 litColor = texColor * (ambient + diffuse) + spec;
 	litColor.a = texColor.a * g_Material.Diffuse.a;
 
-	return litColor;
+	return litColor * 1.5;
 }
