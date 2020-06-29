@@ -50,10 +50,6 @@ private:
 	CBChangesOnResize m_CBOnResize;							    // 该缓冲区存放仅在窗口大小变化时更新的变量
 	CBChangesRarely m_CBRarely;								    // 该缓冲区存放不会再进行修改的变量
 
-	ComPtr<ID3D11SamplerState> m_pSamplerState;				    // 采样器状态
-	ComPtr<ID3D11SamplerState> m_CubeMapSamplerState;				    // 采样器状态
-
-
 	std::shared_ptr<Camera> m_pCamera;
 
 	ComPtr<ID3D11RasterizerState> m_pRSWireframe;	// 光栅化状态：线框模式
