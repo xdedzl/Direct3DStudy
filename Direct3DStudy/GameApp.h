@@ -1,5 +1,4 @@
-#ifndef GAMEAPP_H
-#define GAMEAPP_H
+#pragma once
 
 #include "d3dApp.h"
 #include "ConstantBufferStruct.h"
@@ -8,7 +7,7 @@
 #include "GameObject.h"
 #include "EndlessLand.h"
 #include "Vehicle.h"
-#include "Effects.h"
+#include "RenderStates.h"
 #include "Skybox.h"
 
 class GameApp : public D3DApp
@@ -31,7 +30,6 @@ private:
 	bool InitResource();
 
 private:
-	XEffect m_XEffect;
 	ComPtr<ID3D11Buffer> m_pConstantBuffers[4];		// 常量缓冲区
 
 	Skybox m_Skybox;
@@ -55,6 +53,3 @@ private:
 	ComPtr<ID3D11RasterizerState> m_pRSWireframe;	// 光栅化状态：线框模式
 	bool m_IsWireframeMode;							// 当前是否为线框模式
 };
-
-
-#endif

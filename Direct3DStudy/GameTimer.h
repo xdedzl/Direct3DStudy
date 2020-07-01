@@ -1,9 +1,4 @@
-//***************************************************************************************
-// GameTimer.h by Frank Luna (C) 2011 All Rights Reserved.
-//***************************************************************************************
-
-#ifndef GAMETIMER_H
-#define GAMETIMER_H
+#pragma once
 
 class GameTimer
 {
@@ -22,13 +17,11 @@ private:
 	double m_SecondsPerCount;
 	double m_DeltaTime;
 
-	__int64 m_BaseTime;
-	__int64 m_PausedTime;
-	__int64 m_StopTime;
+	__int64 m_BaseTime;			// 计时开始的时间
+	__int64 m_PausedTime;		// 暂停的总时间
+	__int64 m_StopTime;			// 执行stop的时间
 	__int64 m_PrevTime;
 	__int64 m_CurrTime;
 
 	bool m_Stopped;
 };
-
-#endif // GAMETIMER_H

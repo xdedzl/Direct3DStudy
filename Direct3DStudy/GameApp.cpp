@@ -112,7 +112,6 @@ void GameApp::DrawScene()
 	m_pd3dImmediateContext->ClearRenderTargetView(m_pRenderTargetView.Get(), reinterpret_cast<const float*>(&Colors::Black));
 	m_pd3dImmediateContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	
 	// draw skybox
 	m_pd3dImmediateContext->IASetInputLayout(m_SkyboxInputLayout.Get());
 	m_pd3dImmediateContext->VSSetShader(m_SkyboxVS.Get(), nullptr, 0);
@@ -121,7 +120,6 @@ void GameApp::DrawScene()
 	m_pd3dImmediateContext->RSSetState(RenderStates::RSNoCull.Get());
 	m_pd3dImmediateContext->PSSetSamplers(0, 1, RenderStates::SSLinearWrap.GetAddressOf());
 	m_pd3dImmediateContext->OMSetDepthStencilState(RenderStates::DSSLessEqual.Get(), 0);
-	m_pd3dImmediateContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
 	m_Skybox.Draw(m_pd3dImmediateContext.Get());
 
@@ -132,13 +130,13 @@ void GameApp::DrawScene()
 	m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
 
 	m_pd3dImmediateContext->RSSetState(nullptr);
-	m_pd3dImmediateContext->PSSetSamplers(0, 1, RenderStates::SSLinearWrap.GetAddressOf());
+	m_pd3dImmediateContext->PSSetSamplers(0, 1, RenderStates::SSAnistropicWrap.GetAddressOf());
 	m_pd3dImmediateContext->OMSetDepthStencilState(nullptr, 0);
-	m_pd3dImmediateContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
 	m_EndlessLand.OnDraw(m_pd3dImmediateContext.Get());
 	m_Vehicle.OnDraw(m_pd3dImmediateContext.Get());
 
+	// 呈现最终画面
 	HR(m_pSwapChain->Present(0, 0));
 }
 

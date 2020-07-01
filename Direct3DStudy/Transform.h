@@ -88,6 +88,10 @@ public:
 	__declspec(property(get = GetPosition)) XMFLOAT3 position;
 	// 自身角度
 	__declspec(property(get = GetLocalRotation, put = SetLocalRotation)) XMFLOAT3 localEulerAngles;
+
+	inline XMFLOAT3 GetLocalRotation2() const { return localEulerAngles; }
+	inline void SetLocalRotation2(const XMFLOAT3& newValue) { localEulerAngles = newValue; }
+	inline void SetLocalRotation2(const XMFLOAT3&& newValue) { localEulerAngles = newValue; }
 	__declspec(property(get = GetRotation)) XMFLOAT3 eulerAngles;
 
 private:

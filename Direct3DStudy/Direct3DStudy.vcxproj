@@ -26,8 +26,6 @@
     <ClInclude Include="d3dUtil.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="DXTrace.h" />
-    <ClInclude Include="Effects.h" />
-    <ClInclude Include="EffectHelper.h" />
     <ClInclude Include="EndlessLand.h" />
     <ClInclude Include="GameApp.h" />
     <ClInclude Include="GameObject.h" />
@@ -46,7 +44,6 @@
     <ClInclude Include="XMath.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BasicEffect.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="d3dApp.cpp" />
@@ -63,11 +60,9 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="RenderStates.cpp" />
     <ClCompile Include="Skybox.cpp" />
-    <ClCompile Include="SkyEffect.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Vehicle.cpp" />
     <ClCompile Include="Vertex.cpp" />
-    <ClCompile Include="XEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\Basic.hlsli" />

@@ -25,15 +25,14 @@ ComPtr<ID3D11DepthStencilState> RenderStates::DSSNoDepthWriteWithStencil = nullp
 
 bool RenderStates::IsInit()
 {
-	// 一般来说初始化操作会把所有的状态都创建出来
 	return RSWireframe != nullptr;
 }
 
 void RenderStates::InitAll(ID3D11Device* device)
 {
-	// 先前初始化过的话就没必要重来了
 	if (IsInit())
 		return;
+
 	// ******************
 	// 初始化光栅化器状态
 	//
@@ -47,7 +46,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	rasterizerDesc.DepthClipEnable = true;
 	HR(device->CreateRasterizerState(&rasterizerDesc, RSWireframe.GetAddressOf()));
 
-	// 无背面剔除模式
+	// 不剔除模式
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.FrontCounterClockwise = false;
@@ -83,7 +82,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	sampDesc.MaxAnisotropy = 4;
+	sampDesc.MaxAnisotropy = 16;
 	sampDesc.MinLOD = 0;
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	HR(device->CreateSamplerState(&sampDesc, SSAnistropicWrap.GetAddressOf()));

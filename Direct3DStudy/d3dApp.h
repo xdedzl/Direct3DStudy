@@ -1,5 +1,4 @@
-#ifndef D3DAPP_H
-#define D3DAPP_H
+#pragma once
 
 #include <wrl/client.h>
 #include <string>
@@ -79,5 +78,3 @@ protected:
 	int m_ClientWidth;												// 视口宽度
 	int m_ClientHeight;												// 视口高度
 };
-
-#endif // D3DAPP_H

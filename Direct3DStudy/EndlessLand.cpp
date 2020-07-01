@@ -18,7 +18,7 @@ void EndlessLand::Awake(ID3D11Device* device)
 	for (size_t i = 0; i < 9; i++)
 	{
 		ComPtr<ID3D11ShaderResourceView> texture;
-		HR(CreateDDSTextureFromFile(device, L"Texture\\floor.dds", nullptr, texture.ReleaseAndGetAddressOf()));
+		HR(CreateDDSTextureFromFile(device, L"Texture\\WoodCrate.dds", nullptr, texture.ReleaseAndGetAddressOf()));
 		auto land = &m_Lands[i];
 		land->SetBuffer(device, Geometry::CreatePlane(LandWidth, LandWidth, 10.0f, 10.0f));
 		land->SetTexture(texture.Get());

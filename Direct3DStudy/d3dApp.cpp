@@ -191,7 +191,6 @@ void D3DApp::OnResize()
 	D3D11SetDebugObjectName(m_pDepthStencilBuffer.Get(), "DepthStencilBuffer");
 	D3D11SetDebugObjectName(m_pDepthStencilView.Get(), "DepthStencilView");
 	D3D11SetDebugObjectName(m_pRenderTargetView.Get(), "BackBufferRTV[0]");
-
 }
 
 LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -410,14 +409,12 @@ bool D3DApp::InitDirect3D()
 	for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++)
 	{
 		d3dDriverType = driverTypes[driverTypeIndex];
-		hr = D3D11CreateDevice(nullptr, d3dDriverType, nullptr, createDeviceFlags, featureLevels, numFeatureLevels,
-			D3D11_SDK_VERSION, m_pd3dDevice.GetAddressOf(), &featureLevel, m_pd3dImmediateContext.GetAddressOf());
+		hr = D3D11CreateDevice(nullptr, d3dDriverType, nullptr, createDeviceFlags, featureLevels, numFeatureLevels, D3D11_SDK_VERSION, m_pd3dDevice.GetAddressOf(), &featureLevel, m_pd3dImmediateContext.GetAddressOf());
 
 		if (hr == E_INVALIDARG)
 		{
 			// Direct3D 11.0 的API不承认D3D_FEATURE_LEVEL_11_1，所以我们需要尝试特性等级11.0以及以下的版本
-			hr = D3D11CreateDevice(nullptr, d3dDriverType, nullptr, createDeviceFlags, &featureLevels[1], numFeatureLevels - 1,
-				D3D11_SDK_VERSION, m_pd3dDevice.GetAddressOf(), &featureLevel, m_pd3dImmediateContext.GetAddressOf());
+			hr = D3D11CreateDevice(nullptr, d3dDriverType, nullptr, createDeviceFlags, &featureLevels[1], numFeatureLevels - 1, D3D11_SDK_VERSION, m_pd3dDevice.GetAddressOf(), &featureLevel, m_pd3dImmediateContext.GetAddressOf());
 		}
 
 		if (SUCCEEDED(hr))
@@ -438,12 +435,8 @@ bool D3DApp::InitDirect3D()
 	}
 
 	// 检测 MSAA支持的质量等级
-	m_pd3dDevice->CheckMultisampleQualityLevels(
-		DXGI_FORMAT_R8G8B8A8_UNORM, 4, &m_4xMsaaQuality);
+	m_pd3dDevice->CheckMultisampleQualityLevels(DXGI_FORMAT_R8G8B8A8_UNORM, 4, &m_4xMsaaQuality);
 	assert(m_4xMsaaQuality > 0);
-
-
-
 
 	ComPtr<IDXGIDevice> dxgiDevice = nullptr;
 	ComPtr<IDXGIAdapter> dxgiAdapter = nullptr;
@@ -534,8 +527,7 @@ bool D3DApp::InitDirect3D()
 	D3D11SetDebugObjectName(m_pd3dImmediateContext.Get(), "ImmediateContext");
 	DXGISetDebugObjectName(m_pSwapChain.Get(), "SwapChain");
 
-	// 每当窗口被重新调整大小的时候，都需要调用这个OnResize函数。现在调用
-	// 以避免代码重复
+	// 每当窗口被重新调整大小的时候
 	OnResize();
 
 	return true;
@@ -543,12 +535,12 @@ bool D3DApp::InitDirect3D()
 
 void D3DApp::CalculateFrameStats()
 {
-	// 该代码计算每秒帧速，并计算每一帧渲染需要的时间，显示在窗口标题
 	static int frameCnt = 0;
 	static float timeElapsed = 0.0f;
 
 	frameCnt++;
 
+	// 一秒更新一次帧率
 	if ((m_Timer.TotalTime() - timeElapsed) >= 1.0f)
 	{
 		float fps = (float)frameCnt; // fps = frameCnt / 1
@@ -561,7 +553,7 @@ void D3DApp::CalculateFrameStats()
 			<< L"Frame Time: " << mspf << L" (ms)";
 		SetWindowText(m_hMainWnd, outs.str().c_str());
 
-		// Reset for next average.
+		// 重置
 		frameCnt = 0;
 		timeElapsed += 1.0f;
 	}
