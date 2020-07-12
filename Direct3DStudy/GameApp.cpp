@@ -136,6 +136,8 @@ void GameApp::DrawScene()
 	m_EndlessLand.OnDraw(m_pd3dImmediateContext.Get());
 	m_Vehicle.OnDraw(m_pd3dImmediateContext.Get());
 
+	m_Skybox.Draw(m_pd3dImmediateContext.Get());
+
 	// 呈现最终画面
 	HR(m_pSwapChain->Present(0, 0));
 }

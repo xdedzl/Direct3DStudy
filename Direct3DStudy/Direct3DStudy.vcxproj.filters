@@ -22,9 +22,6 @@
     <Filter Include="Core">
       <UniqueIdentifier>{1ccd1305-fee2-4c7b-a382-926abb50bc5a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Effect">
-      <UniqueIdentifier>{deb29ec6-5c8f-4c39-b4d0-2fbfe643a9f2}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dApp.h">

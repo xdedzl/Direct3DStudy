@@ -34,26 +34,26 @@ void RenderStates::InitAll(ID3D11Device* device)
 		return;
 
 	// ******************
-	// ��ʼ����դ����״̬
+	// 初始化光栅化器状态
 	//
 	D3D11_RASTERIZER_DESC rasterizerDesc;
 	ZeroMemory(&rasterizerDesc, sizeof(rasterizerDesc));
 
-	// �߿�ģʽ
+	// 线框模式
 	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.FrontCounterClockwise = false;
 	rasterizerDesc.DepthClipEnable = true;
 	HR(device->CreateRasterizerState(&rasterizerDesc, RSWireframe.GetAddressOf()));
 
-	// ���޳�ģʽ
+	// 不剔除模式
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.FrontCounterClockwise = false;
 	rasterizerDesc.DepthClipEnable = true;
 	HR(device->CreateRasterizerState(&rasterizerDesc, RSNoCull.GetAddressOf()));
 
-	// ˳ʱ���޳�ģʽ
+	// 顺时针剔除模式
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	rasterizerDesc.CullMode = D3D11_CULL_BACK;
 	rasterizerDesc.FrontCounterClockwise = true;
@@ -61,12 +61,12 @@ void RenderStates::InitAll(ID3D11Device* device)
 	HR(device->CreateRasterizerState(&rasterizerDesc, RSCullClockWise.GetAddressOf()));
 
 	// ******************
-	// ��ʼ��������״̬
+	// 初始化采样器状态
 	//
 	D3D11_SAMPLER_DESC sampDesc;
 	ZeroMemory(&sampDesc, sizeof(sampDesc));
 
-	// ���Թ���ģʽ
+	// 线性过滤模式
 	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -76,7 +76,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	HR(device->CreateSamplerState(&sampDesc, SSLinearWrap.GetAddressOf()));
 
-	// �������Թ���ģʽ
+	// 各向异性过滤模式
 	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -88,19 +88,19 @@ void RenderStates::InitAll(ID3D11Device* device)
 	HR(device->CreateSamplerState(&sampDesc, SSAnistropicWrap.GetAddressOf()));
 
 	// ******************
-	// ��ʼ�����״̬
+	// 初始化混合状态
 	//
 	D3D11_BLEND_DESC blendDesc;
 	ZeroMemory(&blendDesc, sizeof(blendDesc));
 	auto& rtDesc = blendDesc.RenderTarget[0];
-	// Alpha-To-Coverageģʽ
+	// Alpha-To-Coverage模式   // 透明/不透明边界的抗锯齿
 	blendDesc.AlphaToCoverageEnable = true;
 	blendDesc.IndependentBlendEnable = false;
 	rtDesc.BlendEnable = false;
 	rtDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	HR(device->CreateBlendState(&blendDesc, BSAlphaToCoverage.GetAddressOf()));
 
-	// ͸�����ģʽ
+	// 透明混合模式
 	// Color = SrcAlpha * SrcColor + (1 - SrcAlpha) * DestColor 
 	// Alpha = SrcAlpha
 	blendDesc.AlphaToCoverageEnable = false;
@@ -115,7 +115,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 
 	HR(device->CreateBlendState(&blendDesc, BSTransparent.GetAddressOf()));
 
-	// �ӷ����ģʽ
+	// 加法混合模式
 	// Color = SrcColor + DestColor
 	// Alpha = SrcAlpha
 	rtDesc.SrcBlend = D3D11_BLEND_ONE;
@@ -127,7 +127,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 
 	HR(device->CreateBlendState(&blendDesc, BSAdditive.GetAddressOf()));
 
-	// ����ɫд����ģʽ
+	// 无颜色写入混合模式
 	// Color = DestColor
 	// Alpha = DestAlpha
 	rtDesc.BlendEnable = false;
@@ -141,12 +141,12 @@ void RenderStates::InitAll(ID3D11Device* device)
 	HR(device->CreateBlendState(&blendDesc, BSNoColorWrite.GetAddressOf()));
 
 	// ******************
-	// ��ʼ�����/ģ��״̬
+	// 初始化深度/模板状态
 	//
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
 
-	// ����ʹ�����ֵһ�µ����ؽ����滻�����/ģ��״̬
-	// ��״̬���ڻ�����պУ���Ϊ���ֵΪ1.0ʱĬ���޷�ͨ����Ȳ���
+	// 允许使用深度值一致的像素进行替换的深度/模板状态
+	// 该状态用于绘制天空盒，因为深度值为1.0时默认无法通过深度测试
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
@@ -155,9 +155,9 @@ void RenderStates::InitAll(ID3D11Device* device)
 
 	HR(device->CreateDepthStencilState(&dsDesc, DSSLessEqual.GetAddressOf()));
 
-	// д��ģ��ֵ�����/ģ��״̬
-	// ���ﲻд�������Ϣ
-	// ���������滹�Ǳ��棬ԭ��ָ���������ģ��ֵ���ᱻд��StencilRef
+	// 写入模板值的深度/模板状态
+	// 这里不写入深度信息
+	// 无论是正面还是背面，原来指定的区域的模板值都会被写入StencilRef
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
@@ -170,7 +170,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-	// ���ڱ���ļ����������ǲ�������Ⱦ�ģ���������������޹ؽ�Ҫ
+
 	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
@@ -178,8 +178,8 @@ void RenderStates::InitAll(ID3D11Device* device)
 
 	HR(device->CreateDepthStencilState(&dsDesc, DSSWriteStencil.GetAddressOf()));
 
-	// ��ָ��ģ��ֵ���л��Ƶ����/ģ��״̬
-	// ������ģ��ֵ����������Ž��л��ƣ����������
+	// 对指定模板值进行绘制的深度/模板状态
+	// 对满足模板值条件的区域才进行绘制，并更新深度
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
@@ -192,7 +192,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
-	// ���ڱ���ļ����������ǲ�������Ⱦ�ģ���������������޹ؽ�Ҫ
+
 	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
@@ -200,9 +200,9 @@ void RenderStates::InitAll(ID3D11Device* device)
 
 	HR(device->CreateDepthStencilState(&dsDesc, DSSDrawWithStencil.GetAddressOf()));
 
-	// �޶��λ�����/ģ��״̬
-	// ����Ĭ����Ȳ���
-	// ͨ���Ե���ʹ��ԭ��StencilRef��ֵֻ��ʹ��һ�Σ�ʵ�ֽ�һ�λ��
+	// 无二次混合深度/模板状态
+	// 允许默认深度测试
+	// 通过自递增使得原来StencilRef的值只能使用一次，实现仅一次混合
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
@@ -215,7 +215,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
-	// ���ڱ���ļ����������ǲ�������Ⱦ�ģ���������������޹ؽ�Ҫ
+
 	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
@@ -223,20 +223,20 @@ void RenderStates::InitAll(ID3D11Device* device)
 
 	HR(device->CreateDepthStencilState(&dsDesc, DSSNoDoubleBlend.GetAddressOf()));
 
-	// �ر���Ȳ��Ե����/ģ��״̬
-	// �����Ʒ�͸�����壬����ϸ��ջ���˳��
-	// ����͸����������Ҫ���Ļ���˳��
-	// ��Ĭ�������ģ����Ծ��ǹرյ�
+	// 关闭深度测试的深度/模板状态
+	// 若绘制非透明物体，务必严格按照绘制顺序
+	// 绘制透明物体则不需要担心绘制顺序
+	// 而默认情况下模板测试就是关闭的
 	dsDesc.DepthEnable = false;
 	dsDesc.StencilEnable = false;
 
 	HR(device->CreateDepthStencilState(&dsDesc, DSSNoDepthTest.GetAddressOf()));
 
 
-	// �ر���Ȳ���
-	// �����Ʒ�͸�����壬����ϸ��ջ���˳��
-	// ����͸����������Ҫ���Ļ���˳��
-	// ������ģ��ֵ����������Ž��л���
+	// 关闭深度测试
+	// 若绘制非透明物体，务必严格按照绘制顺序
+	// 绘制透明物体则不需要担心绘制顺序
+	// 对满足模板值条件的区域才进行绘制
 	dsDesc.StencilEnable = true;
 	dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 	dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
@@ -245,7 +245,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
-	// ���ڱ���ļ����������ǲ�������Ⱦ�ģ���������������޹ؽ�Ҫ
+
 	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
@@ -253,10 +253,10 @@ void RenderStates::InitAll(ID3D11Device* device)
 
 	HR(device->CreateDepthStencilState(&dsDesc, DSSNoDepthTestWithStencil.GetAddressOf()));
 
-	// ������Ȳ��ԣ�����д�����ֵ��״̬
-	// �����Ʒ�͸������ʱ��Ӧʹ��Ĭ��״̬
-	// ����͸������ʱ��ʹ�ø�״̬������Чȷ�����״̬�Ľ���
-	// ����ȷ����ǰ�ķ�͸����������赲�Ϻ��һ������
+	// 进行深度测试，但不写入深度值的状态
+	// 若绘制非透明物体时，应使用默认状态
+	// 绘制透明物体时，使用该状态可以有效确保混合状态的进行
+	// 并且确保较前的非透明物体可以阻挡较后的一切物体
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
@@ -265,11 +265,11 @@ void RenderStates::InitAll(ID3D11Device* device)
 	HR(device->CreateDepthStencilState(&dsDesc, DSSNoDepthWrite.GetAddressOf()));
 
 
-	// ������Ȳ��ԣ�����д�����ֵ��״̬
-	// �����Ʒ�͸������ʱ��Ӧʹ��Ĭ��״̬
-	// ����͸������ʱ��ʹ�ø�״̬������Чȷ�����״̬�Ľ���
-	// ����ȷ����ǰ�ķ�͸����������赲�Ϻ��һ������
-	// ������ģ��ֵ����������Ž��л���
+	// 进行深度测试，但不写入深度值的状态
+	// 若绘制非透明物体时，应使用默认状态
+	// 绘制透明物体时，使用该状态可以有效确保混合状态的进行
+	// 并且确保较前的非透明物体可以阻挡较后的一切物体
+	// 对满足模板值条件的区域才进行绘制
 	dsDesc.StencilEnable = true;
 	dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 	dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
@@ -278,7 +278,7 @@ void RenderStates::InitAll(ID3D11Device* device)
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
-	// ���ڱ���ļ����������ǲ�������Ⱦ�ģ���������������޹ؽ�Ҫ
+
 	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
